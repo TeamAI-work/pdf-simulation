@@ -262,10 +262,34 @@ export const nonSimulatableFixture: SimSpec = {
   equations: [],
 }
 
+export const templateProjectileFixture: SimSpec = {
+  version: '2.0',
+  parentTopic: 'Kinematics',
+  title: 'Projectile from textbook values',
+  subtitle: 'Bound at click from extracted v0, angle, and g',
+  domain: 'physics',
+  topicExplanation:
+    'A projectile launched with an initial velocity follows a parabola under constant gravity.',
+  caption: 'Solver uses x = v0 cos(θ) t, y = h0 + v0 sin(θ) t − ½ g t²',
+  isSimulatable: true,
+  reasonIfNotSimulatable: '',
+  quote: 'A ball is thrown at 20 m/s at 45° from ground level.',
+  equations: ['R = v_0^2 \\sin(2\\theta) / g'],
+  templateId: 'projectile_2d',
+  params: { v0: 20, angleDeg: 45, h0: 0, g: 9.81 },
+  paramMeta: {
+    v0: { unit: 'm/s', source: 'extracted' },
+    angleDeg: { unit: 'deg', source: 'extracted' },
+    h0: { unit: 'm', source: 'extracted' },
+    g: { unit: 'm/s^2', source: 'default' },
+  },
+}
+
 export const allFixtures: Record<string, SimSpec> = {
   physics: physicsFixture,
   chemistry: chemistryFixture,
   math: mathFixture,
   general: generalFixture,
   nonSimulatable: nonSimulatableFixture,
+  templateProjectile: templateProjectileFixture,
 }

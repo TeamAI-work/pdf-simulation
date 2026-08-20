@@ -2,7 +2,7 @@
 
 import crypto from 'node:crypto'
 import * as mathjs from 'mathjs'
-import { isExpr, type SimSpec } from '@pdf-sim/shared'
+import { isExpr, type SimSpec, isTemplateId, parseTemplateParams } from '@pdf-sim/shared'
 import { shouldClassify } from '../pdf/shouldClassify.js'
 import { classifyPage } from './classify.js'
 import {
@@ -66,6 +66,35 @@ export function triageCandidates(candidates: Candidate[]): Candidate[] {
     .filter((c) => c.importance >= 6)
     .sort((a, b) => b.importance - a.importance)
     .slice(0, 3)
+}
+
+/**
+ * Prefer catalog templates: unknown templateId is dropped unless a valid SVG stage remains.
+ * Known templateId specs lose any LLM-drawn stage so the solver owns the visual.
+ */
+export function normalizeTemplateCandidate(candidate: Candidate): Candidate | null {
+  if (!candidate.templateId) {
+    return candidate
+  }
+
+  if (!isTemplateId(candidate.templateId)) {
+    console.warn(`[ingest] Dropping unknown templateId "${candidate.templateId}"`)
+    if (candidate.stage && candidate.stage.elements.length > 0) {
+      const { templateId: _tid, params: _p, paramMeta: _m, ...rest } = candidate
+      return rest as Candidate
+    }
+    return null
+  }
+
+  const { params, paramMeta } = parseTemplateParams(candidate.templateId, candidate.params)
+  return {
+    ...candidate,
+    params,
+    paramMeta,
+    stage: undefined,
+    isSimulatable: true,
+    reasonIfNotSimulatable: '',
+  }
 }
 
 /**
@@ -138,8 +167,16 @@ export async function processPageIngestion(params: IngestPageParams): Promise<An
     return []
   }
 
-  // 5. Math Guard
-  const validCandidates = triaged.filter((cand) => validateMathExpressions(cand))
+  // 4b. Template normalize (unknown ids dropped; known ids strip LLM stage)
+  const normalized = triaged
+    .map(normalizeTemplateCandidate)
+    .filter((c): c is Candidate => c !== null)
+  if (normalized.length === 0) {
+    return []
+  }
+
+  // 5. Math Guard (skip when there is no stage — template specs bind at click)
+  const validCandidates = normalized.filter((cand) => validateMathExpressions(cand))
   if (validCandidates.length === 0) {
     return []
   }

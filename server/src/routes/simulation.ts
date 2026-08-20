@@ -263,7 +263,11 @@ simulationRouter.post('/generate', async (req: Request, res: Response): Promise<
     console.log(`[routes] Generating on-demand AI simulation for: "${queryText.substring(0, 80)}..."`, context.title ? `(Concept: ${context.title})` : '')
     const candidate = await generateCustomSimulation(queryText, {}, context)
 
-    if (!candidate || !candidate.stage) {
+    const playable = Boolean(
+      (candidate.templateId && candidate.isSimulatable) ||
+        (candidate.stage && candidate.stage.elements.length > 0)
+    )
+    if (!candidate || !candidate.isSimulatable || !playable) {
       res.status(422).json({
         error: 'The AI could not generate a valid animated simulation for this prompt. Please try a more specific physical or mathematical concept.',
       })

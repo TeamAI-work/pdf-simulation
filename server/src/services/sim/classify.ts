@@ -7,6 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import OpenAI from 'openai'
 import { Candidate, CandidateSchema, CandidateListSchema } from './candidateSchema.js'
 import { generateProceduralSimSpec, type ConceptContext } from './proceduralSim.js'
+import { createTemplateSpec, isTemplateId, matchTemplateFromText, parseTemplateParams } from '@pdf-sim/shared'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -313,19 +314,46 @@ export async function classifyPage(
 }
 
 /**
- * Generates an on-demand custom SVG simulation from a user prompt or specific textbook excerpt.
- * Cascades across Groq -> OpenRouter -> Gemini -> Procedural engine for 100% reliability.
+ * Generates an on-demand simulation. Prefers a catalog template (no LLM).
+ * Unmatched topics still use the LLM SVG path, then the procedural mapper.
  */
 export async function generateCustomSimulation(
   promptOrText: string,
   options: ClassifyOptions = {},
   context: ConceptContext = {}
 ): Promise<Candidate> {
+  const blob = [
+    promptOrText,
+    context.title,
+    context.subtitle,
+    context.parentTopic,
+    context.topicExplanation,
+    context.quote,
+    (context.equations || []).join(' '),
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const matched = matchTemplateFromText(blob)
+  if (matched) {
+    const spec = createTemplateSpec(matched.templateId, matched.params, {
+      title: context.title || matched.title,
+      subtitle: context.subtitle,
+      parentTopic: context.parentTopic,
+      domain: (context.domain as Candidate['domain']) || 'physics',
+      topicExplanation: context.topicExplanation,
+      equations: context.equations,
+      quote: context.quote || promptOrText.substring(0, 200),
+    })
+    return { ...spec, importance: 8 }
+  }
+
   const customSystemPrompt = `${getSystemPrompt()}
 
-IMPORTANT INSTRUCTION FOR ON-DEMAND GENERATION:
-You must design a single, richly animated, visually clear SVG simulation specifically visualizing the exact concept, equations, and physical principles described in the user prompt.
-Return a JSON array with exactly ONE Candidate object containing isSimulatable: true and a valid stage.elements array.`
+IMPORTANT FOR ON-DEMAND GENERATION:
+Prefer a known templateId + params when the concept matches the catalog.
+If it does not match, return exactly ONE Candidate with isSimulatable true and a valid stage.elements SVG fallback.
+Do not invent an unknown templateId.`
 
   const queryText = context.title
     ? `Concept to animate:
@@ -335,9 +363,7 @@ Domain: ${context.domain || 'physics'}
 Parent Topic: ${context.parentTopic || ''}
 Equations: ${(context.equations || []).join('; ')}
 Explanation: ${context.topicExplanation || ''}
-Textbook Context / Quote: "${context.quote || promptOrText}"
-
-Design a unique, high-detail 2D SVG animation specifically for "${context.title}".`
+Textbook Context / Quote: "${context.quote || promptOrText}"`
     : promptOrText
 
   try {
@@ -346,14 +372,25 @@ Design a unique, high-detail 2D SVG animation specifically for "${context.title}
       systemPrompt: customSystemPrompt,
     })
 
-    if (candidates.length > 0 && candidates[0].isSimulatable && candidates[0].stage) {
-      return candidates[0]
+    const first = candidates[0]
+    if (first?.isSimulatable) {
+      if (first.templateId && isTemplateId(first.templateId)) {
+        const { params, paramMeta } = parseTemplateParams(first.templateId, first.params)
+        return {
+          ...first,
+          params,
+          paramMeta,
+          stage: undefined,
+        }
+      }
+      if (first.stage && first.stage.elements.length > 0) {
+        return first
+      }
     }
   } catch (err: any) {
     console.warn('[classify] All LLM providers exhausted, switching to procedural simulation engine:', err?.message || err)
   }
 
-  // Graceful high-fidelity procedural generation fallback tailored to this exact concept
   return generateProceduralSimSpec(promptOrText, context)
 }
 

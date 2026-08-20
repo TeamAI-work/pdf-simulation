@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { validateMathExpressions, triageCandidates, computeContentHash } from '../ingest.js'
-import { physicsFixture, chemistryFixture } from '@pdf-sim/shared'
+import { validateMathExpressions, triageCandidates, computeContentHash, normalizeTemplateCandidate } from '../ingest.js'
+import { physicsFixture, chemistryFixture, templateProjectileFixture } from '@pdf-sim/shared'
 import type { Candidate } from '../candidateSchema.js'
 
 describe('Ingest Service: validateMathExpressions (Math Guard)', () => {
@@ -49,6 +49,46 @@ describe('Ingest Service: validateMathExpressions (Math Guard)', () => {
       stage: undefined,
     }
     expect(validateMathExpressions(nonSimSpec)).toBe(true)
+  })
+
+  it('returns true for template-only specs with no stage', () => {
+    expect(validateMathExpressions(templateProjectileFixture)).toBe(true)
+  })
+})
+
+describe('Ingest Service: normalizeTemplateCandidate', () => {
+  it('parses a template-only LLM candidate and strips any cartoon stage', () => {
+    const cand: Candidate = {
+      ...templateProjectileFixture,
+      importance: 9,
+      stage: physicsFixture.stage,
+    }
+    const normalized = normalizeTemplateCandidate(cand)
+    expect(normalized?.templateId).toBe('projectile_2d')
+    expect(normalized?.params?.v0).toBe(20)
+    expect(normalized?.stage).toBeUndefined()
+    expect(normalized?.isSimulatable).toBe(true)
+  })
+
+  it('drops unknown templateId when there is no fallback stage', () => {
+    const cand: Candidate = {
+      ...templateProjectileFixture,
+      importance: 8,
+      templateId: 'wormhole_drive',
+      stage: undefined,
+    }
+    expect(normalizeTemplateCandidate(cand)).toBeNull()
+  })
+
+  it('keeps SVG fallback when templateId is unknown but stage is valid', () => {
+    const cand: Candidate = {
+      ...physicsFixture,
+      importance: 8,
+      templateId: 'wormhole_drive',
+    }
+    const normalized = normalizeTemplateCandidate(cand)
+    expect(normalized?.templateId).toBeUndefined()
+    expect(normalized?.stage?.elements.length).toBeGreaterThan(0)
   })
 })
 

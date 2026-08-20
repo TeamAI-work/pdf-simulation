@@ -30,6 +30,7 @@ describe('CandidateSchema', () => {
       ...physicsFixture,
       importance: 7,
       isSimulatable: true,
+      templateId: undefined,
       stage: {
         viewBox: '0 0 500 300',
         elements: [],
@@ -37,6 +38,20 @@ describe('CandidateSchema', () => {
     }
 
     expect(CandidateSchema.safeParse(invalid).success).toBe(false)
+  })
+
+  it('accepts a template-only candidate with no stage', () => {
+    const templated = {
+      version: '2.0',
+      title: 'Projectile',
+      domain: 'physics',
+      isSimulatable: true,
+      templateId: 'projectile_2d',
+      params: { v0: 20, angleDeg: 45 },
+      importance: 8,
+    }
+    const result = CandidateSchema.safeParse(templated)
+    expect(result.success).toBe(true)
   })
 })
 

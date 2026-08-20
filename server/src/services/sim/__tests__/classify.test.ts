@@ -52,10 +52,29 @@ describe('Classify Service: JSON cleaning and parsing', () => {
     expect(candidates.map((c) => c.title)).toEqual(['Sim 1', 'Sim 2', 'Sim 3'])
   })
 
+  it('parses template-only candidates without a stage', () => {
+    const json = JSON.stringify([
+      {
+        version: '2.0',
+        title: 'Projectile motion',
+        domain: 'physics',
+        isSimulatable: true,
+        templateId: 'projectile_2d',
+        params: { v0: 20, angleDeg: 45, h0: 0, g: 9.81 },
+        importance: 9,
+      },
+    ])
+    const candidates = parseCandidateResponse(json)
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0].templateId).toBe('projectile_2d')
+    expect(candidates[0].params?.v0).toBe(20)
+    expect(candidates[0].stage).toBeUndefined()
+  })
+
   it('silently filters out malformed candidates', () => {
     const json = JSON.stringify([
       { ...physicsFixture, importance: 9 },
-      { invalid: true }, // Should be dropped
+      { invalid: true },
       { ...mathFixture, importance: 6 },
     ])
     const candidates = parseCandidateResponse(json)

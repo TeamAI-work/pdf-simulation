@@ -112,6 +112,7 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
   const handleRegenerateCurrentSim = async () => {
     if (!selectedAnnotation) return
     const spec = selectedAnnotation.spec
+    if (spec.templateId) return
     const isCustom = customSimulations.some((s) => s.id === selectedAnnotation.id)
     const result = await simApiClient.generateAiSimulation({
       prompt: spec.title,

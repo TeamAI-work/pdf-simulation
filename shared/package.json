@@ -16,6 +16,10 @@
     "./simSpec.fixtures": {
       "import": "./simSpec.fixtures.ts",
       "default": "./simSpec.fixtures.ts"
+    },
+    "./templates": {
+      "import": "./templates/index.ts",
+      "default": "./templates/index.ts"
     }
   },
   "scripts": {

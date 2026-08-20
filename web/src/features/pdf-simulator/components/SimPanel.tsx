@@ -1,7 +1,13 @@
 // web/src/features/pdf-simulator/components/SimPanel.tsx
 
-import React, { useState } from 'react'
-import type { SimSpec } from '@pdf-sim/shared'
+import React, { useEffect, useMemo, useState } from 'react'
+import {
+  bindTemplate,
+  isTemplateId,
+  randomizeTemplateParams,
+  TEMPLATE_CATALOG,
+  type SimSpec,
+} from '@pdf-sim/shared'
 import { SimStage } from '../sim/SimStage.js'
 
 export interface SimPanelProps {
@@ -12,6 +18,15 @@ export interface SimPanelProps {
   onToggleAnimation?: () => void
 }
 
+function textbookParams(spec: SimSpec): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(spec.params || {})) {
+    const n = typeof v === 'number' ? v : Number(v)
+    if (Number.isFinite(n)) out[k] = n
+  }
+  return out
+}
+
 export const SimPanel: React.FC<SimPanelProps> = ({
   spec,
   onClose,
@@ -20,6 +35,20 @@ export const SimPanel: React.FC<SimPanelProps> = ({
   onToggleAnimation,
 }) => {
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const templated = Boolean(spec?.templateId && isTemplateId(spec.templateId))
+  const [sliderParams, setSliderParams] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    if (spec) setSliderParams(textbookParams(spec))
+  }, [spec])
+
+  const bound = useMemo(() => {
+    if (!spec?.templateId || !isTemplateId(spec.templateId)) return null
+    return bindTemplate(spec.templateId, sliderParams, spec)
+  }, [spec, sliderParams])
+
+  const stage = bound?.spec.stage ?? spec?.stage
+  const playable = Boolean(spec && (stage || templated))
 
   const handleRegenerate = async () => {
     if (!onRegenerateWithAi) return
@@ -31,7 +60,7 @@ export const SimPanel: React.FC<SimPanelProps> = ({
     }
   }
 
-  if (!spec || !spec.stage) {
+  if (!spec || !playable || !stage) {
     return (
       <div
         style={{
@@ -57,6 +86,9 @@ export const SimPanel: React.FC<SimPanelProps> = ({
   }
 
   const domainClass = `badge badge-${spec.domain || 'general'}`
+  const paramDefs = templated && spec.templateId && isTemplateId(spec.templateId)
+    ? TEMPLATE_CATALOG[spec.templateId].params
+    : []
 
   return (
     <div
@@ -67,7 +99,6 @@ export const SimPanel: React.FC<SimPanelProps> = ({
         width: '100%',
       }}
     >
-      {/* Simulation Header */}
       <div
         style={{
           display: 'flex',
@@ -122,7 +153,44 @@ export const SimPanel: React.FC<SimPanelProps> = ({
             </button>
           )}
 
-          {onRegenerateWithAi && (
+          {templated && spec.templateId && isTemplateId(spec.templateId) && (
+            <>
+              <button
+                type="button"
+                onClick={() => setSliderParams(textbookParams(spec))}
+                className="action-btn-secondary"
+                style={{
+                  padding: '0.25rem 0.6rem',
+                  fontSize: '0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                }}
+                title="Restore numbers extracted from the textbook"
+              >
+                Reset to textbook values
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (spec.templateId && isTemplateId(spec.templateId)) {
+                    setSliderParams(randomizeTemplateParams(spec.templateId))
+                  }
+                }}
+                className="action-btn-secondary"
+                style={{
+                  padding: '0.25rem 0.6rem',
+                  fontSize: '0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                }}
+                title="Fill sliders with random in-range values to preview animation quality"
+              >
+                Randomize values
+              </button>
+            </>
+          )}
+
+          {onRegenerateWithAi && !templated && (
             <button
               onClick={handleRegenerate}
               disabled={isRegenerating}
@@ -158,7 +226,6 @@ export const SimPanel: React.FC<SimPanelProps> = ({
         </div>
       </div>
 
-      {/* Main SVG Simulation Canvas (auto-playing) — Collapsible for text focus */}
       {isAnimationVisible ? (
         <div
           style={{
@@ -168,7 +235,7 @@ export const SimPanel: React.FC<SimPanelProps> = ({
             padding: '1rem',
             backgroundColor: 'var(--color-bg)',
             minHeight: '260px',
-            maxHeight: '340px',
+            maxHeight: templated ? '420px' : '340px',
           }}
         >
           <div
@@ -182,15 +249,95 @@ export const SimPanel: React.FC<SimPanelProps> = ({
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
+              minHeight: '220px',
             }}
           >
             <SimStage
-              stage={spec.stage}
+              key={`${spec.templateId || spec.title}:${JSON.stringify(sliderParams)}`}
+              stage={stage}
               autoPlay={true}
               initialSpeed={1}
               showControls={true}
             />
           </div>
+
+          {templated && paramDefs.length > 0 && (
+            <div
+              style={{
+                marginTop: '0.65rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem',
+              }}
+            >
+              {bound?.warnings && bound.warnings.length > 0 && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>
+                  {bound.warnings.join(' · ')}
+                </div>
+              )}
+              {bound?.metrics && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.45rem',
+                    fontSize: '0.72rem',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-primary)',
+                  }}
+                >
+                  {Object.entries(bound.metrics).map(([k, v]) => (
+                    <span
+                      key={k}
+                      style={{
+                        background: 'var(--color-primary-subtle)',
+                        padding: '0.12rem 0.4rem',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                    >
+                      {k}={typeof v === 'number' ? Number(v).toFixed(2) : String(v)}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {paramDefs.map((def) => (
+                <label
+                  key={def.key}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '110px 1fr 64px',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.75rem',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  <span>
+                    {def.label}
+                    {def.unit ? ` (${def.unit})` : ''}
+                  </span>
+                  <input
+                    type="range"
+                    min={def.min}
+                    max={def.max}
+                    step={def.step}
+                    value={sliderParams[def.key] ?? def.defaultValue}
+                    onChange={(e) =>
+                      setSliderParams((prev) => ({
+                        ...prev,
+                        [def.key]: Number(e.target.value),
+                      }))
+                    }
+                  />
+                  <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>
+                    {(sliderParams[def.key] ?? def.defaultValue).toFixed(
+                      def.step < 1 ? 2 : 0
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div

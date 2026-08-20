@@ -48,23 +48,40 @@ describe('SimSpecSchema validation', () => {
     }
   })
 
-  it('rejects isSimulatable=true without stage or with empty elements', () => {
+  it('rejects isSimulatable=true without stage, templateId, or with empty elements', () => {
     const invalidNoStage = {
       ...physicsFixture,
       stage: undefined,
+      templateId: undefined,
     }
     expect(() => SimSpecSchema.parse(invalidNoStage)).toThrow(
-      'isSimulatable=true requires stage.elements to be non-empty'
+      'isSimulatable=true requires stage.elements or a templateId'
     )
 
     const invalidEmptyElements = {
       ...physicsFixture,
+      templateId: undefined,
       stage: {
         viewBox: '0 0 500 300',
         elements: [],
       },
     }
     expect(() => SimSpecSchema.parse(invalidEmptyElements)).toThrow()
+  })
+
+  it('accepts isSimulatable=true with templateId and no stage', () => {
+    const templated = {
+      version: '2.0',
+      title: 'Textbook projectile',
+      domain: 'physics',
+      isSimulatable: true,
+      templateId: 'projectile_2d',
+      params: { v0: 20, angleDeg: 45, h0: 0, g: 9.81 },
+    }
+    const parsed = SimSpecSchema.parse(templated)
+    expect(parsed.templateId).toBe('projectile_2d')
+    expect(parsed.params?.v0).toBe(20)
+    expect(parsed.stage).toBeUndefined()
   })
 
   it('rejects unsupported domain', () => {

@@ -12,6 +12,6 @@
     "rootDir": ".",
     "skipLibCheck": true
   },
-  "include": ["*.ts"],
+  "include": ["*.ts", "templates/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { simApiClient, type SimAnnotation } from '../api.js'
+import { createTemplateSpec, matchTemplateFromText, randomizeTemplateParams, TEMPLATE_CATALOG, TEMPLATE_IDS } from '@pdf-sim/shared'
 
 export interface SimDrawerProps {
   isOpen: boolean
@@ -53,6 +54,30 @@ export const SimDrawer: React.FC<SimDrawerProps> = ({
     setGenerateError(null)
 
     try {
+      const matched = matchTemplateFromText(text)
+      if (matched) {
+        const spec = createTemplateSpec(matched.templateId, matched.params, {
+          title: matched.title,
+          quote: text,
+          domain: 'physics',
+        })
+        const customSim: SimAnnotation = {
+          id: `custom-sim-${Date.now()}`,
+          book_id: 'custom-prompts',
+          page_number: pageNumber,
+          quote: text,
+          spec,
+          spec_version: '2.0',
+          created_at: new Date().toISOString(),
+        }
+        onCustomSimulationAdded?.(customSim)
+        onSelectSimulation(customSim)
+        setCustomPrompt('')
+        setActiveTab('custom')
+        onClose()
+        return
+      }
+
       const result = await simApiClient.generateAiSimulation({
         prompt: text,
       })
@@ -81,6 +106,11 @@ export const SimDrawer: React.FC<SimDrawerProps> = ({
   }
 
   const handleReanimateCard = async (item: SimAnnotation) => {
+    if (item.spec.templateId) {
+      onSelectSimulation(item)
+      onClose()
+      return
+    }
     setIsGenerating(true)
     setGenerateError(null)
 
@@ -107,6 +137,33 @@ export const SimDrawer: React.FC<SimDrawerProps> = ({
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleLaunchRandomTemplate = (templateId: (typeof TEMPLATE_IDS)[number]) => {
+    const def = TEMPLATE_CATALOG[templateId]
+    const params = randomizeTemplateParams(templateId)
+    const paramSummary = Object.entries(params)
+      .map(([k, v]) => `${k}=${typeof v === 'number' ? Number(v.toFixed(2)) : v}`)
+      .join(', ')
+    const spec = createTemplateSpec(templateId, params, {
+      title: `${def.label} (random test)`,
+      subtitle: def.description,
+      quote: `Quality preview with random params: ${paramSummary}`,
+      domain: 'physics',
+    })
+    const customSim: SimAnnotation = {
+      id: `template-test-${templateId}-${Date.now()}`,
+      book_id: 'custom-prompts',
+      page_number: pageNumber,
+      quote: spec.quote,
+      spec,
+      spec_version: '2.0',
+      created_at: new Date().toISOString(),
+    }
+    onCustomSimulationAdded?.(customSim)
+    onSelectSimulation(customSim)
+    setActiveTab('custom')
+    onClose()
   }
 
   return (
@@ -248,6 +305,45 @@ export const SimDrawer: React.FC<SimDrawerProps> = ({
               ⚠️ {generateError}
             </div>
           )}
+        </div>
+
+        <div
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px dashed var(--color-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '0.85rem 1.15rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.55rem',
+          }}
+        >
+          <div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text)' }}>
+              Test templates with random data
+            </span>
+            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.15rem' }}>
+              No PDF or LLM. Opens a catalog animation with randomized in-range values so you can judge motion quality.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {TEMPLATE_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="action-btn-secondary"
+                onClick={() => handleLaunchRandomTemplate(id)}
+                style={{
+                  padding: '0.3rem 0.65rem',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                }}
+                title={`Launch ${TEMPLATE_CATALOG[id].label} with random params`}
+              >
+                {TEMPLATE_CATALOG[id].label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Distinct Separation Tabs */}
@@ -400,25 +496,37 @@ export const SimDrawer: React.FC<SimDrawerProps> = ({
                       )}
 
                       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-                        <button
-                          type="button"
-                          className="action-btn-secondary"
-                          onClick={() => handleReanimateCard(item)}
-                          disabled={isGenerating}
-                          style={{
-                            padding: '0.35rem 0.75rem',
-                            fontSize: '0.75rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            color: 'var(--color-primary)',
-                            borderColor: 'rgba(37, 99, 235, 0.3)',
-                          }}
-                          title="Re-animate this specific textbook concept using LLM"
-                        >
-                          <span>✨</span>
-                          <span>Re-animate with LLM</span>
-                        </button>
+                          {item.spec.templateId ? (
+                            <span
+                              style={{
+                                fontSize: '0.72rem',
+                                color: 'var(--color-text-muted)',
+                                padding: '0.35rem 0.5rem',
+                              }}
+                            >
+                              Template: {item.spec.templateId}
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="action-btn-secondary"
+                              onClick={() => handleReanimateCard(item)}
+                              disabled={isGenerating}
+                              style={{
+                                padding: '0.35rem 0.75rem',
+                                fontSize: '0.75rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                color: 'var(--color-primary)',
+                                borderColor: 'rgba(37, 99, 235, 0.3)',
+                              }}
+                              title="Re-animate this specific textbook concept using LLM"
+                            >
+                              <span>✨</span>
+                              <span>Re-animate with LLM</span>
+                            </button>
+                          )}
 
                         <button
                           className="action-btn"

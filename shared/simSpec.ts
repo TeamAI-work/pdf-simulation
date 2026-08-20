@@ -78,12 +78,31 @@ export const SimSpecSchema = z.object({
   /** Verbatim text excerpt — shown in the Drawer for context only, NOT used for spatial mapping */
   quote: z.string().default(''),
   equations: z.array(z.string()).default([]),
+  /**
+   * Known physics template id (e.g. projectile_2d). When set, the client binds
+   * `params` through a solver instead of trusting an LLM-drawn stage.
+   */
+  templateId: z.string().min(1).optional(),
+  /** Solver inputs in SI-ish units. Numbers preferred; strings coerced at bind time. */
+  params: z.record(z.string(), z.union([z.number(), z.string()])).optional(),
+  /** Per-param provenance: extracted from the textbook quote vs catalog default. */
+  paramMeta: z
+    .record(
+      z.string(),
+      z.object({
+        unit: z.string().optional(),
+        source: z.enum(['extracted', 'default']).optional(),
+      })
+    )
+    .optional(),
   stage: StageSchema.optional(),
 }).superRefine((spec, ctx) => {
-  if (spec.isSimulatable && (!spec.stage || spec.stage.elements.length === 0)) {
+  const hasStage = Boolean(spec.stage && spec.stage.elements.length > 0)
+  const hasTemplate = Boolean(spec.templateId && spec.templateId.length > 0)
+  if (spec.isSimulatable && !hasStage && !hasTemplate) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'isSimulatable=true requires stage.elements to be non-empty',
+      message: 'isSimulatable=true requires stage.elements or a templateId',
       path: ['stage'],
     })
   }
