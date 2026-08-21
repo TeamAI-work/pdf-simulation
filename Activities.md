@@ -658,3 +658,617 @@
 * **Mapped Chapter:** Chapter 18 (*Too Much Water, Too Little Water*)
 * **LLM-Generatable Example:**
   > *"If someone is suffering from diarrhea, what is the name of the life-saving salt and sugar solution they should drink, and why is it important?"*
+
+# Class 5
+
+## 🔢 Mathematics (*Math-Magic - Class 5*)
+
+### 1. Large Number Word Problems (Lakhs & Crores)
+* **Description:** Multi-digit addition, subtraction, multiplication, or division embedded in real-world contexts (e.g., population, money, large-scale farming/fishing).
+* **Mapped Chapter:** Chapter 1 (*Fish Tale*)
+* **LLM-Generatable Example:**
+  > *"A fishing boat catches 45,678 kg of fish in a week, and another boat catches 32,109 kg. What is the total catch? Write the final number in words."*
+
+---
+
+### 2. Area and Perimeter Comparisons
+* **Description:** Calculating the area (by counting squares or using length × breadth) and perimeter of rectangles/squares, often comparing two different shapes that have the same area but different perimeters.
+* **Mapped Chapters:** 
+  * Chapter 3 (*How Many Squares?*)
+  * Chapter 4 (*Parts and Wholes - grid fractions*)
+* **LLM-Generatable Example:**
+  > *"Rectangle A is 6 cm long and 4 cm wide. Rectangle B is 8 cm long and 3 cm wide. Do they have the same area? What are their respective perimeters?"*
+
+---
+
+### 3. Fraction Operations & Equivalency
+* **Description:** Identifying equivalent fractions, adding/subtracting fractions with like or simple unlike denominators, and finding a fraction of a given quantity.
+* **Mapped Chapter:** Chapter 4 (*Parts and Wholes*)
+* **LLM-Generatable Example:**
+  > *"Riya ate 1/4 of a chocolate bar, and her brother ate 2/8 of the same bar. Did they eat the same amount? Show your reasoning using equivalent fractions."*
+
+---
+
+### 4. Factors, Multiples, and Divisibility
+* **Description:** Identifying prime/composite numbers, finding the Highest Common Factor (HCF) or Lowest Common Multiple (LCM), and applying divisibility rules (by 2, 3, 5, 10).
+* **Mapped Chapter:** Chapter 5 (*Be My Multiple, I'll Be Your Factor*)
+* **LLM-Generatable Example:**
+  > *"Find the smallest number that is exactly divisible by both 4 and 6. List the first three common multiples of 4 and 6."*
+
+---
+
+### 5. Angle Identification & Classification
+* **Description:** Describing angles based on their degree measures or visual properties (right, acute, obtuse, straight) and identifying them in letters of the alphabet or clock times.
+* **Mapped Chapter:** Chapter 2 (*Shapes and Angles*)
+* **LLM-Generatable Example:**
+  > *"Look at the capital letter 'Y'. How many angles are formed? Classify each angle as acute, obtuse, or right."*
+
+---
+
+## 🌿 Environmental Studies (*Looking Around - Class 5*)
+
+### 6. Sensory Adaptation & Animal Behavior
+* **Description:** Matching specific animals to their heightened senses or unique survival behaviors, testing understanding of biological adaptation.
+* **Mapped Chapter:** Chapter 1 (*Super Senses*)
+* **LLM-Generatable Example:**
+  > *"Which animal relies primarily on its sense of smell to recognize its friends and enemies, and how do ants leave a trail for others to follow?"*
+
+---
+
+### 7. Seed Dispersal Mechanisms
+* **Description:** Categorizing seeds based on how they travel (wind, water, animals, or explosion/bursting) using descriptive clues.
+* **Mapped Chapter:** Chapter 5 (*Seeds and Seeds*)
+* **LLM-Generatable Example:**
+  > *"Match the seed to its dispersal method:*  
+  > *1. Xanthium (seeds with hooks) → (a) Wind*  
+  > *2. Dandelion (light, hairy seeds) → (b) Animals*  
+  > *3. Coconut (fibrous outer layer) → (c) Water"*
+
+---
+
+### 8. Water Conservation & Calculation Scenarios
+* **Description:** Identifying methods of water saving (rainwater harvesting, fixing leaks) and solving simple math problems related to water usage or wastage.
+* **Mapped Chapter:** Chapter 6 (*Every Drop Counts*)
+* **LLM-Generatable Example:**
+  > *"A leaking tap wastes 2 litres of water every hour. How many litres of water will be wasted in one full day (24 hours)? Name one method to harvest rainwater at home."*
+
+---
+
+### 9. Historical Architecture & Fort Features
+* **Description:** Identifying the purpose of specific architectural features in historical forts (e.g., bastions, thick walls, stepwells) based on textual descriptions.
+* **Mapped Chapter:** Chapter 7 (*Walls Tell Stories*)
+* **LLM-Generatable Example:**
+  > *"Why were the walls of Golconda Fort built with a slope, and what was the purpose of the large cannons placed on the bastions?"*
+
+---
+
+### 10. Social Dynamics & Gender Equality Scenarios
+* **Description:** Short-answer questions presenting a social situation (e.g., sports, household chores) and asking the student to identify stereotypes and propose inclusive solutions.
+* **Mapped Chapter:** Chapter 11 (*Across the Wall*)
+* **LLM-Generatable Example:**
+  > *"If a girl wants to play football but is told 'this is a boy's game', what are two logical arguments she can use to challenge this stereotype?"*
+
+---
+
+### 11. Space & Microgravity Concepts
+* **Description:** Comparing everyday Earth activities with how they are performed in space, testing understanding of gravity.
+* **Mapped Chapter:** Chapter 13 (*Sunita in Space*)
+* **LLM-Generatable Example:**
+  > *"Why does water float in blobs inside a spacecraft, and how do astronauts drink water in space?"*
+
+---
+
+## 📚 English (*Class 5*)
+
+### 12. Reading Comprehension (Inferential & Factual)
+* **Description:** A short, generated passage (100–150 words) followed by questions that require finding explicit details and making simple inferences.
+* **Mapped Chapters:** General integration across Units (e.g., *Playing with Games*, *Birds and Animals*)
+* **LLM-Generatable Example:**
+  > *"[Short passage about a child rescuing a trapped bird].*  
+  > *Question 1: Why was the bird unable to fly?*  
+  > *Question 2: What does the child's action tell us about their character?"*
+
+---
+
+### 13. Grammar in Context (Tenses & Subject-Verb Agreement)
+* **Description:** Fill-in-the-blanks or sentence correction exercises focusing on present/past/future tenses and singular/plural agreement within a thematic paragraph.
+* **Mapped Chapter:** General Grammar Integration
+* **LLM-Generatable Example:**
+  > *"Fill in the blanks with the correct form of the verb: 'Yesterday, the children ______ (play) in the park, but today they ______ (study) for their exams.'"*
+
+---
+
+### 14. Vocabulary Building (Synonyms, Antonyms, Homophones)
+* **Description:** Identifying word relationships based on context clues provided in a sentence.
+* **Mapped Chapter:** General Vocabulary Integration
+* **LLM-Generatable Example:**
+  > *"Choose the correct homophone: The knight rode his horse into the (night / knight). Write the synonym for the word 'brave'."*
+
+---
+
+### 15. Functional Writing Prompts (Evaluation-Friendly)
+* **Description:** The LLM generates a specific scenario and asks the student to write a short functional text (e.g., a diary entry, a short informal letter, or a notice). The LLM can also be prompted to provide an evaluation rubric.
+* **Mapped Chapter:** Writing Skills (*Diary, Letter, Notice*)
+* **LLM-Generatable Example:**
+  > *"Write a short diary entry (40–50 words) about the day you won a prize in a school drawing competition. Include your feelings and the date."*
+
+# Class 6
+
+## 🔢 Mathematics (*Mathematics - Class 6*)
+
+### 1. Number System & Estimation (Rounding & Roman Numerals)
+* **Description:** Converting between standard numbers and Roman numerals, or rounding off large numbers to the nearest tens, hundreds, or thousands. LLMs handle these deterministic rules perfectly.
+* **Mapped Chapter:** Chapter 1 (*Knowing Our Numbers*)
+* **LLM-Generatable Example:**
+  > *"Round off the number 4,56,789 to the nearest thousand. Also, write the Roman numeral for 894."*
+
+---
+
+### 2. Divisibility Rules & Prime Factorization (HCF/LCM)
+* **Description:** Testing divisibility rules (2, 3, 4, 5, 6, 8, 9, 10, 11), finding prime factors, and solving word problems requiring Highest Common Factor (HCF) or Lowest Common Multiple (LCM).
+* **Mapped Chapter:** Chapter 3 (*Playing with Numbers*)
+* **LLM-Generatable Example:**
+  > *"Find the HCF of 18 and 24.*  
+  > *Word Problem: What is the smallest number of flowers needed to make bouquets of exactly 6 and exactly 8 without any leftovers?"*
+
+---
+
+### 3. Geometrical Text Descriptions (Lines, Angles, Polygons)
+* **Description:** Since LLMs cannot draw directly, they can describe geometric properties and ask the student to identify the shape, line type (ray vs. segment), or angle type.
+* **Mapped Chapter:** Chapter 4 (*Basic Geometrical Ideas*)
+* **LLM-Generatable Example:**
+  > *"I have exactly one endpoint and extend infinitely in one direction. What am I? (Point / Line / Ray).*  
+  > *How many sides does a hexagon have?"*
+
+---
+
+### 4. Fraction & Decimal Operations (Number Line & Word Problems)
+* **Description:** Adding/subtracting fractions with unlike denominators, comparing decimals, and representing them on a text-described number line.
+* **Mapped Chapters:** 
+  * Chapter 7 (*Fractions*)
+  * Chapter 8 (*Decimals*)
+* **LLM-Generatable Example:**
+  > *"Which is greater: 0.5 or 0.48? Solve and simplify: 2/3 + 1/4."*
+
+---
+
+### 5. Algebraic Patterns & Variables
+* **Description:** Translating word statements into algebraic expressions using variables (e.g., 'x'), or finding the rule for a matchstick pattern.
+* **Mapped Chapter:** Chapter 11 (*Algebra*)
+* **LLM-Generatable Example:**
+  > *"If a matchstick pattern requires 3 matchsticks for the first letter 'A', write the rule for the number of matchsticks needed for 'n' letters.*  
+  > *If Harsha has x rupees and spends 15, how much is left?"*
+
+---
+
+## 🔬 Science (*Science - Class 6*)
+
+### 6. Nutrient Testing & Deficiency Matching
+* **Description:** Identifying the chemical reagents used to test for specific nutrients (e.g., iodine for starch) or matching vitamins/minerals to their deficiency diseases.
+* **Mapped Chapter:** Chapter 1 (*Components of Food*)
+* **LLM-Generatable Example:**
+  > *"Which nutrient turns blue-black when a few drops of iodine solution are added to it?*  
+  > *Match the disease to the deficiency: Scurvy → (a) Vitamin C, (b) Iron."*
+
+---
+
+### 7. Material Sorting & Separation Techniques
+* **Description:** Categorizing materials (soluble/insoluble, transparent/opaque) and selecting the correct method to separate a mixture (threshing, winnowing, filtration, evaporation).
+* **Mapped Chapters:** 
+  * Chapter 2 (*Sorting Materials*)
+  * Chapter 3 (*Separation of Substances*)
+* **LLM-Generatable Example:**
+  > *"How would you separate a mixture of sand and water? (a) Threshing (b) Filtration (c) Winnowing.*  
+  > *Is wood transparent, translucent, or opaque?"*
+
+---
+
+### 8. Plant & Animal Anatomy Classification
+* **Description:** Classifying plants based on stem characteristics (herb, shrub, tree) or root systems (tap vs. fibrous), and identifying types of animal joints or locomotion.
+* **Mapped Chapters:** 
+  * Chapter 4 (*Getting to Know Plants*)
+  * Chapter 5 (*Body Movements*)
+* **LLM-Generatable Example:**
+  > *"A plant with a green, tender, and weak stem is called a ________.*  
+  > *Which joint is found in the human elbow? (a) Ball and socket (b) Hinge (c) Pivot."*
+
+---
+
+### 9. Motion Types & SI Unit Conversions
+* **Description:** Identifying types of motion (rectilinear, circular, periodic) and converting standard SI units (meters to centimeters, kilometers to meters).
+* **Mapped Chapter:** Chapter 6 (*Motion and Measurement of Distances*)
+* **LLM-Generatable Example:**
+  > *"Convert 4.5 kilometers into meters.*  
+  > *The motion of a child on a swing is an example of what type of motion?"*
+
+---
+
+### 10. Circuit Logic & Light Properties
+* **Description:** Determining if a simple electrical circuit will light a bulb based on described materials (conductors vs. insulators), or identifying light properties (luminous vs. non-luminous, shadows).
+* **Mapped Chapters:** 
+  * Chapter 9 (*Light*)
+  * Chapter 10 (*Electricity and Circuits*)
+* **LLM-Generatable Example:**
+  > *"If you connect a plastic string instead of a copper wire to a cell, will the bulb glow? Why or why not?*  
+  > *What is formed when an opaque object blocks light?"*
+
+---
+
+## 🌍 Social Sciences (*History, Geography, Civics - Class 6*)
+
+### 11. Historical Source Identification
+* **Description:** Differentiating between types of historical evidence (manuscripts vs. inscriptions) and identifying early human tools or domestication practices.
+* **Mapped Chapters:** 
+  * History Chapter 1 (*What, Where, How and When?*)
+  * History Chapter 2 (*From Gathering to Growing Food*)
+* **LLM-Generatable Example:**
+  > *"What is the difference between a manuscript and an inscription?*  
+  > *Which animal was among the first to be tamed by early humans? (a) Horse (b) Dog (c) Elephant."*
+
+---
+
+### 12. Landform & Drainage Text Mapping
+* **Description:** Describing the physical features of the earth (mountains, plateaus, plains) and river systems (tributaries, drainage basins) through text clues.
+* **Mapped Chapter:** Geography Chapter 3 (*Major Landforms of the Earth*)
+* **LLM-Generatable Example:**
+  > *"A large body of water that flows through a channel on land is called a ________.*  
+  > *The smaller streams that join a main river are called its ________."*
+
+---
+
+### 13. Civic Scenarios & Governance Roles
+* **Description:** Presenting a local community problem and asking which democratic body (Gram Panchayat, Municipal Corporation) is responsible, or testing the concept of Universal Adult Franchise.
+* **Mapped Chapters:** 
+  * Civics Chapter 4 (*Understanding Diversity*)
+  * Civics Chapter 5 (*Key Elements of a Democratic Government*)
+* **LLM-Generatable Example:**
+  > *"Who is responsible for maintaining the local streets and streetlights in a rural village?*  
+  > *What does 'Universal Adult Franchise' mean?"*
+
+---
+
+## 📚 English (*English - Class 6*)
+
+### 14. Contextual Grammar (Tenses, Articles, Prepositions)
+* **Description:** Fill-in-the-blanks or error-correction exercises embedded in short paragraphs, focusing on the correct use of 'a/an/the', prepositions of time/place, and past/present tenses.
+* **Mapped Chapter:** Grammar Integration across all Units
+* **LLM-Generatable Example:**
+  > *"Fill in the blanks with the correct article: She is ___ honest girl. We will meet ___ Monday.*  
+  > *Correct the error: He 'go' to school yesterday."*
+
+---
+
+### 15. Inferential Reading Comprehension
+* **Description:** Generating a short, age-appropriate unseen passage (150–200 words) followed by questions that require both factual retrieval and simple inference.
+* **Mapped Chapter:** Reading Comprehension Sections
+* **LLM-Generatable Example:**
+  > *"[Passage about a boy who rescues a stray dog in the rain].*  
+  > *Question 1: Why was the dog shivering?*  
+  > *Question 2: What does the boy's action tell you about his personality?"*
+
+---
+
+### 16. Functional Writing Formats (Notice & Diary)
+* **Description:** Providing a scenario and asking the student to draft a functional text using the correct structural format (e.g., Notice requires Date, Heading, Body, Sign-off).
+* **Mapped Chapter:** Writing Skills
+* **LLM-Generatable Example:**
+  > *"Write a short notice (50 words) for your school notice board informing students about a lost and found event happening next Friday. Ensure you include the correct format."*
+
+# Class 7
+
+## 🔢 Mathematics (*Mathematics - Class 7*)
+
+### 1. Integer & Rational Number Word Problems (Real-World Contexts)
+* **Description:** Scenarios involving temperature changes, bank deposits/withdrawals, or directional movement (East/West) requiring integer or rational number operations. LLMs excel at generating these deterministic narratives.
+* **Mapped Chapters:** 
+  * Chapter 1 (*Integers*)
+  * Chapter 8 (*Rational Numbers*)
+* **LLM-Generatable Example:**
+  > *"The temperature at 12:00 PM is 15°C. It drops by 2°C every hour. What will the temperature be at 5:00 PM? Represent the final temperature as an integer."*
+
+---
+
+### 2. Simple Equations & Algebraic Translation
+* **Description:** Translating verbal statements into algebraic equations and solving for the variable (e.g., finding an unknown number based on given operations).
+* **Mapped Chapters:** 
+  * Chapter 4 (*Simple Equations*)
+  * Chapter 10 (*Algebraic Expressions*)
+* **LLM-Generatable Example:**
+  > *"I think of a number, multiply it by 4, and add 7. The result is 39. Write the equation and find the number."*
+
+---
+
+### 3. Text-Based Geometry (Lines, Angles, and Triangles)
+* **Description:** Since LLMs cannot draw diagrams directly, they can describe geometric configurations and ask students to apply theorems (e.g., angle sum property, exterior angle property, parallel lines cut by a transversal).
+* **Mapped Chapters:** 
+  * Chapter 5 (*Lines and Angles*)
+  * Chapter 6 (*Triangle Properties*)
+* **LLM-Generatable Example:**
+  > *"Two parallel lines are cut by a transversal. If one of the interior angles is 65°, what is the measure of its corresponding angle and its alternate interior angle?"*  
+  > *or*  
+  > *"In a triangle, two angles measure 45° and 55°. Find the third angle."*
+
+---
+
+### 4. Comparing Quantities (Percentages, Profit/Loss, Simple Interest)
+* **Description:** Multi-step financial math problems. LLMs can generate infinite variations of cost price, selling price, discount, and simple interest scenarios with 100% accurate calculations.
+* **Mapped Chapter:** Chapter 7 (*Comparing Quantities*)
+* **LLM-Generatable Example:**
+  > *"A shopkeeper buys a cycle for Rs 2,500 and sells it for Rs 3,000. What is his profit percentage? If he had borrowed the Rs 2,500 at 8% simple interest per annum for 1 year, how much interest would he have to pay?"*
+
+---
+
+### 5. Perimeter & Area (Circles and Composite Shapes)
+* **Description:** Calculating the area and circumference of circles (using $\pi$), or finding the area of a path running around a rectangular field.
+* **Mapped Chapter:** Chapter 9 (*Perimeter and Area*)
+* **LLM-Generatable Example:**
+  > *"A circular park has a radius of 21 m. Find its circumference. If a wire is needed to fence the park twice, what is the total length of the wire required?"*
+
+---
+
+## 🔬 Science (*Science - Class 7*)
+
+### 6. Modes of Nutrition & Biological Classification
+* **Description:** Identifying the mode of nutrition (autotrophic, heterotrophic, saprophytic, parasitic) based on textual descriptions of an organism's behavior or habitat.
+* **Mapped Chapters:** 
+  * Chapter 1 (*Nutrition in Plants*)
+  * Chapter 2 (*Nutrition in Animals*)
+* **LLM-Generatable Example:**
+  > *"An organism makes its own food using sunlight, water, and carbon dioxide. What is this mode of nutrition called? Give one example of a parasitic plant."*
+
+---
+
+### 7. Acids, Bases, and Indicators (Logical Deduction)
+* **Description:** Predicting the nature of a substance (acidic, basic, neutral) based on how it reacts with specific natural or synthetic indicators (litmus, turmeric, china rose).
+* **Mapped Chapter:** Chapter 5 (*Acids, Bases and Salts*)
+* **LLM-Generatable Example:**
+  > *"A solution turns blue litmus paper red. What is the nature of the solution? If you dip turmeric paper into this solution, what color change will you observe?"*
+
+---
+
+### 8. Physical vs. Chemical Changes (Categorization)
+* **Description:** Providing a list of everyday phenomena and asking the student to classify them, along with providing a scientific reason.
+* **Mapped Chapter:** Chapter 6 (*Physical and Chemical Changes*)
+* **LLM-Generatable Example:**
+  > *"Classify the following as physical or chemical changes:*  
+  > *(a) Melting of wax*  
+  > *(b) Burning of wood*  
+  > *(c) Dissolving sugar in water*  
+  > *(d) Rusting of an iron nail*  
+  > *Give one reason for your choice in (b)."*
+
+---
+
+### 9. Human Physiology (Respiration & Transportation)
+* **Description:** Fill-in-the-blanks or short-answer questions testing the mechanics of breathing (aerobic/anaerobic), components of blood, and the structure of the heart.
+* **Mapped Chapters:** 
+  * Chapter 9 (*Respiration in Organisms*)
+  * Chapter 11 (*Transportation in Animals and Plants*)
+* **LLM-Generatable Example:**
+  > *"During heavy exercise, muscle cells undergo anaerobic respiration. What is the byproduct produced in human muscle cells during this process? Which component of blood is responsible for clotting?"*
+
+---
+
+### 10. Speed, Distance, and Time Calculations
+* **Description:** Applying the formula $\text{Speed} = \frac{\text{Distance}}{\text{Time}}$ to solve real-world motion problems, including interpreting distance-time graphs described in text.
+* **Mapped Chapter:** Chapter 13 (*Motion and Time*)
+* **LLM-Generatable Example:**
+  > *"A train travels a distance of 300 km in 4 hours. Calculate its average speed. If it continues at the same speed, how far will it travel in 6 hours?"*
+
+---
+
+### 11. Electromagnetic Effects & Circuit Logic
+* **Description:** Describing simple electrical circuits or Oersted’s experiment in text and asking for the outcome (e.g., bulb glowing, compass needle deflection).
+* **Mapped Chapter:** Chapter 14 (*Electric Current and Its Effects*)
+* **LLM-Generatable Example:**
+  > *"When a magnetic compass is placed near a wire carrying electric current, what happens to the compass needle? What is this effect called?"*
+
+---
+
+## 🌍 Social Sciences (*History, Geography, Civics - Class 7*)
+
+### 12. Historical Chronology & Architectural Matching
+* **Description:** Matching specific rulers to their dynasties, or identifying the architectural features and locations of famous historical monuments (e.g., Rajarajeshvara temple).
+* **Mapped Chapters:** 
+  * History Chapter 1 (*Tracing Changes Through a Thousand Years*)
+  * History Chapter 2 (*New Kings and Kingdoms*)
+* **LLM-Generatable Example:**
+  > *"Match the following: 1. Rajaraja I → (a) Chalukya Dynasty, 2. Pulakeshin → (b) Chola Dynasty.*  
+  > *Where is the Rajarajeshvara temple located, and who built it?"*
+
+---
+
+### 13. Earth Sciences (Layers of the Earth & Rock Classification)
+* **Description:** Categorizing rocks into igneous, sedimentary, and metamorphic based on their formation processes, or describing the layers of the Earth textually.
+* **Mapped Chapter:** Geography Chapter 2 (*Inside Our Earth*)
+* **LLM-Generatable Example:**
+  > *"Granite is an igneous rock. Explain how it is formed.*  
+  > *Match the rock to its type: (a) Sandstone, (b) Marble, (c) Basalt."*
+
+---
+
+### 14. Civic Governance & Jurisdiction (State vs. Union)
+* **Description:** Identifying which level of government (Local, State, or Union) is responsible for specific subjects listed in the State List or Union List.
+* **Mapped Chapter:** Civics Chapter 5 (*How the State Government Works*)
+* **LLM-Generatable Example:**
+  > *"Which level of government is responsible for maintaining 'Police' and 'Public Health'? Who is the head of the State government, and how are they appointed?"*
+
+---
+
+## 📚 English (*English - Class 7*)
+
+### 15. Grammar in Context (Active/Passive Voice & Clauses)
+* **Description:** Transforming sentences between active and passive voice, or identifying noun, adverb, and adjective clauses within a generated paragraph.
+* **Mapped Chapter:** General Grammar Integration
+* **LLM-Generatable Example:**
+  > *"Change the voice: 'The teacher is explaining the lesson.'*  
+  > *Identify the type of clause in the underlined part: 'The book that you gave me is very interesting.'"*
+
+---
+
+### 16. Inferential & Thematic Reading Comprehension
+* **Description:** Generating a 200–250 word unseen passage (e.g., a narrative about a historical event or a scientific discovery) followed by questions requiring inference, vocabulary deduction, and theme identification.
+* **Mapped Chapter:** Reading Comprehension Sections
+* **LLM-Generatable Example:**
+  > *"[Passage about the discovery of penicillin].*  
+  > *Question 1: How did Alexander Fleming's observation differ from a mere accident?*  
+  > *Question 2: Find a word in the passage that means 'accidental'."*
+
+
+# Class 8
+
+# LLM Question Generation Framework for Middle School (Grade 8)
+
+This document outlines question templates, descriptions, curriculum chapter mappings (NCERT aligned: Mathematics Class 8, Science Class 8, Social Science Class 8, and English Class 8), and LLM-generatable examples across Mathematics, Science, Social Sciences, and English.
+
+---
+
+## 🔢 Mathematics (*Mathematics - Class 8*)
+
+### 1. Linear Equations in One Variable (Word Problems)
+* **Description:** Algebraic word problems involving age, perimeter, digits of a two-digit number, and consecutive integers. LLMs handle the equation formulation and deterministic solution verification easily.
+* **Mapped Chapter:** Chapter 2 (*Linear Equations in One Variable*)
+* **LLM-Generatable Example:**
+  > *"The sum of three consecutive multiples of 8 is 888. Set up the linear equation and find these multiples."*
+
+---
+
+### 2. Exponents, Powers & Standard Scientific Notation
+* **Description:** Simplifying expressions using laws of exponents (negative and fractional powers) and converting extremely large or small numbers into standard scientific notation ($m \times 10^n$).
+* **Mapped Chapter:** Chapter 10 (*Exponents and Powers*)
+* **LLM-Generatable Example:**
+  > *"Express the size of a plant cell, which is 0.00001275 m, in standard form. Simplify: $(3^{-7} \div 3^{-10}) \times 3^{-5}$."*
+
+---
+
+### 3. Factorization & Algebraic Identities
+* **Description:** Factorizing algebraic expressions using common terms, regrouping, and standard algebraic identities like $(a+b)^2$, $(a-b)^2$, and $(a^2 - b^2)$.
+* **Mapped Chapter:** Chapter 12 (*Factorisation*)
+* **LLM-Generatable Example:**
+  > *"Factorize the expression completely: $49x^2 - 36y^2$. Also, divide $(x^2 + 7x + 10)$ by $(x + 2)$."*
+
+---
+
+### 4. Mensuration (Surface Area & Volume of 3D Solids)
+* **Description:** Computing lateral surface area, total surface area, and volume of cylinders, cubes, and cuboids embedded in practical engineering and storage scenarios.
+* **Mapped Chapter:** Chapter 9 (*Mensuration*)
+* **LLM-Generatable Example:**
+  > *"A cylindrical water tank has a radius of 7 m and a height of 10 m. Find the volume of water it can store in litres ($1\text{ m}^3 = 1000\text{ L}$)."*
+
+---
+
+### 5. Direct and Inverse Proportions
+* **Description:** Identifying whether two variables vary directly or inversely and solving work-time, speed-time, and unit-price word problems.
+* **Mapped Chapter:** Chapter 11 (*Direct and Inverse Proportions*)
+* **LLM-Generatable Example:**
+  > *"If 15 workers can build a wall in 48 hours, how many workers will be required to do the same work in 30 hours?"*
+
+---
+
+## 🔬 Science (*Science - Class 8*)
+
+### 6. Microorganisms: Friend and Foe (Classification & Pathology)
+* **Description:** Categorizing microbes into bacteria, fungi, protozoa, and algae, and matching human/plant diseases with their causative agents and modes of transmission.
+* **Mapped Chapter:** Chapter 2 (*Microorganisms: Friend and Foe*)
+* **LLM-Generatable Example:**
+  > *"Match the disease to its causative organism and transmission mode: (1) Citrus Canker, (2) Rust of Wheat, (3) Malaria. Which bacterium promotes the formation of curd from milk?"*
+
+---
+
+### 7. Force, Pressure & Atmospheric Effects
+* **Description:** Differentiating between contact (muscular, friction) and non-contact forces (magnetic, electrostatic, gravitational), and calculating pressure ($P = F/A$).
+* **Mapped Chapter:** Chapter 8 (*Force and Pressure*)
+* **LLM-Generatable Example:**
+  > *"Why do porters place a round piece of cloth on their heads when carrying heavy loads? Calculate the pressure exerted if a force of 100 N is applied over an area of $2\text{ m}^2$."*
+
+---
+
+### 8. Friction: Causes, Types, and Control
+* **Description:** Comparing static, sliding, and rolling friction, explaining aerodynamic drag (fluid friction), and identifying methods used to increase or reduce friction.
+* **Mapped Chapter:** Chapter 9 (*Friction*)
+* **LLM-Generatable Example:**
+  > *"Arrange static, sliding, and rolling friction in increasing order of their magnitude. Why are the bodies of airplanes given special streamlined shapes?"*
+
+---
+
+### 9. Sound, Frequency, and Pitch
+* **Description:** Connecting amplitude to loudness and frequency to pitch/shrillness, defining audible vs. inaudible ranges, and identifying the vibrating part producing sound in musical instruments.
+* **Mapped Chapter:** Chapter 10 (*Sound*)
+* **LLM-Generatable Example:**
+  > *"A pendulum oscillates 40 times in 4 seconds. Find its time period and frequency. What happens to the pitch of a sound if the frequency of vibration increases?"*
+
+---
+
+### 10. Chemical Effects of Electric Current & Electroplating
+* **Description:** Classifying liquids as conductors or electrolytes and describing the process, purpose, and electrode reactions involved in electroplating metals.
+* **Mapped Chapter:** Chapter 11 (*Chemical Effects of Electric Current*)
+* **LLM-Generatable Example:**
+  > *"Explain why a copper coating deposits on the negative electrode when electric current is passed through a copper sulphate ($\text{CuSO}_4$) solution."*
+
+---
+
+## 🌍 Social Sciences (*History, Geography, Civics - Class 8*)
+
+### 11. Colonial Economy & Tribal Transformations
+* **Description:** Analyzing colonial land revenue settlements (Permanent Settlement, Mahalwari, Ryotwari) and the socio-economic impact of British policies on indigenous tribal communities.
+* **Mapped Chapters:** 
+  * History Chapter 2 (*From Trade to Territory*)
+  * History Chapter 4 (*Tribals, Dikus and the Vision of a Golden Age*)
+* **LLM-Generatable Example:**
+  > *"What was the main difference between the Permanent Settlement and the Ryotwari system? Explain the significance of the Birsa Munda movement."*
+
+---
+
+### 12. The Revolt of 1857 & Structural Shifts
+* **Description:** Identifying immediate and underlying causes of the 1857 uprising, its major leadership centers, and the subsequent administrative changes under the Government of India Act 1858.
+* **Mapped Chapter:** History Chapter 5 (*When People Rebel: 1857 and After*)
+* **LLM-Generatable Example:**
+  > *"Name two changes introduced by the British Crown in the administration of India after the Revolt of 1857. Who led the rebellion in Kanpur?"*
+
+---
+
+### 13. Resource Geography & Sustainable Development
+* **Description:** Classifying natural resources (renewable vs. non-renewable, biotic vs. abiotic), evaluating soil conservation methods, and identifying agricultural patterns.
+* **Mapped Chapters:** 
+  * Geography Chapter 1 (*Resources*)
+  * Geography Chapter 2 (*Land, Soil, Water, Natural Vegetation and Wildlife Resources*)
+* **LLM-Generatable Example:**
+  > *"Differentiate between 'Terrace Farming' and 'Shelter Belts' as soil conservation techniques. What are the three core principles of sustainable development?"*
+
+---
+
+### 14. Constitutional Framework & Secularism
+* **Description:** Evaluating key features of the Indian Constitution (Federalism, Separation of Powers, Fundamental Rights) and analyzing Indian secularism versus Western secularism.
+* **Mapped Chapters:** 
+  * Civics Chapter 1 (*The Indian Constitution*)
+  * Civics Chapter 2 (*Understanding Secularism*)
+* **LLM-Generatable Example:**
+  > *"Explain how the Indian Constitution prevents tyranny by the majority. How does the Indian concept of secularism differ from the strict separation observed in the United States?"*
+
+---
+
+## 📚 English (*English - Class 8*)
+
+### 15. Advanced Contextual Grammar (Reported Speech & Conditionals)
+* **Description:** Converting direct speech into indirect/reported speech, completing conditional clauses (Type 1, 2, 3), and identifying non-finite verbs (infinitives, gerunds, participles).
+* **Mapped Chapter:** General Grammar Integration
+* **LLM-Generatable Example:**
+  > *"Convert the following into Indirect Speech: 'The doctor said to the patient, "Take these medicines on time and avoid cold water."' Complete the conditional: 'If we had left earlier, we ________ (catch) the train.'"*
+
+---
+
+### 16. Thematic & Analytical Reading Comprehension
+* **Description:** Generating a 250–300 word text (science report, historical excerpt, or literary reflection) followed by higher-order thinking (HOTS) questions, vocabulary-in-context, and tone identification.
+* **Mapped Chapter:** Reading & Analytical Skills
+* **LLM-Generatable Example:**
+  > *"[Short analytical passage on artificial intelligence in wildlife conservation].*  
+  > *Question 1: What central paradox does the author highlight in the second paragraph?*  
+  > *Question 2: Identify a word in the text that means 'indispensable'."*
+
+---
+
+### 17. Formal Writing Prompts (Letter to the Editor & Speech Writing)
+* **Description:** Generating structured real-world scenarios requiring formal register, appropriate transitional phrases, and targeted persuasive discourse with clear rubrics.
+* **Mapped Chapter:** Writing Skills
+* **LLM-Generatable Example:**
+  > *"Write a Letter to the Editor (100–120 words) of a national daily highlighting the issue of open garbage dumps in your locality and suggesting practical community-led solutions."*
