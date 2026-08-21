@@ -51,7 +51,7 @@ export function generateProceduralSimSpec(
       title: context.title || matched.title,
       subtitle: context.subtitle,
       parentTopic: context.parentTopic,
-      domain: (context.domain as SimSpec['domain']) || 'physics',
+      domain: context.domain as SimSpec['domain'] | undefined,
       topicExplanation: context.topicExplanation,
       equations: context.equations,
       quote,
@@ -70,7 +70,7 @@ export function generateProceduralSimSpec(
       caption: '',
       isSimulatable: false,
       reasonIfNotSimulatable:
-        'No physics template matched this concept. Optics, circuits, magnetism, and other topics need a dedicated template or LLM SVG fallback.',
+        'No catalog template matched this concept. Only Class 6–10 physics, chemistry, and maths sim files can run.',
       quote,
       equations: context.equations || [],
     },

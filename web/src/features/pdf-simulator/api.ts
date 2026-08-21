@@ -47,6 +47,29 @@ export interface SelectionExplanation {
   relatedFormulas?: string[]
 }
 
+export interface ChatApiTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatBookContext {
+  title?: string
+  currentPage?: number
+  parentTopic?: string
+  domain?: string
+}
+
+export interface ChatReply {
+  reply: string
+  relatedFormulas?: string[]
+  keyTakeaways?: string[]
+}
+
+export interface SimBrief {
+  about: string
+  howItWorks: string
+}
+
 export interface SimAnnotation {
   id: string
   book_id: string
@@ -79,6 +102,7 @@ class SimulationApiClient {
   private bookCache: Map<string, BookRecord> = new Map()
   // specKey -> StudentExplanation
   private explanationCache: Map<string, StudentExplanation> = new Map()
+  private simBriefCache: Map<string, SimBrief> = new Map()
   // Single-flight in-flight request deduping: requestKey -> Promise<any>
   private pendingRequests: Map<string, Promise<any>> = new Map()
 
@@ -332,6 +356,58 @@ class SimulationApiClient {
   }
 
   /**
+   * Multi-turn chat reply using full conversation history.
+   */
+  async sendChatMessage(params: {
+    messages: ChatApiTurn[]
+    bookContext?: ChatBookContext
+  }): Promise<ChatReply> {
+    const res = await fetch('/api/sim/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || `Failed to send chat message: ${res.statusText}`)
+    }
+
+    const data = await res.json()
+    return {
+      reply: data.reply as string,
+      relatedFormulas: data.relatedFormulas,
+      keyTakeaways: data.keyTakeaways,
+    }
+  }
+
+  /**
+   * Short "what this is" + "how it works" blurb for the Sim tab.
+   */
+  async fetchSimBrief(params: { spec: SimSpec; quote?: string }): Promise<SimBrief> {
+    const cacheKey = `${params.spec.title}:${params.spec.subtitle || ''}:${params.quote || params.spec.quote || ''}`
+    if (this.simBriefCache.has(cacheKey)) {
+      return this.simBriefCache.get(cacheKey)!
+    }
+
+    const res = await fetch('/api/sim/sim-brief', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || `Failed to fetch sim brief: ${res.statusText}`)
+    }
+
+    const data = await res.json()
+    const brief = data.brief as SimBrief
+    this.simBriefCache.set(cacheKey, brief)
+    return brief
+  }
+
+  /**
    * Manually pre-seed annotations (useful after polling status completes or for testing).
    */
   seedAnnotations(bookId: string, annotations: SimAnnotation[]): void {
@@ -345,6 +421,7 @@ class SimulationApiClient {
     this.bookAnnotationsCache.clear()
     this.bookCache.clear()
     this.explanationCache.clear()
+    this.simBriefCache.clear()
     this.pendingRequests.clear()
   }
 }

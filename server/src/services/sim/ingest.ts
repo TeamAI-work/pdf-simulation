@@ -69,20 +69,19 @@ export function triageCandidates(candidates: Candidate[]): Candidate[] {
 }
 
 /**
- * Prefer catalog templates: unknown templateId is dropped unless a valid SVG stage remains.
- * Known templateId specs lose any LLM-drawn stage so the solver owns the visual.
+ * Books only store templateId + params. Unknown ids and LLM-drawn stages are dropped.
  */
 export function normalizeTemplateCandidate(candidate: Candidate): Candidate | null {
   if (!candidate.templateId) {
+    if (candidate.isSimulatable) {
+      console.warn('[ingest] Dropping candidate with no templateId (LLM stage is not stored)')
+      return null
+    }
     return candidate
   }
 
   if (!isTemplateId(candidate.templateId)) {
     console.warn(`[ingest] Dropping unknown templateId "${candidate.templateId}"`)
-    if (candidate.stage && candidate.stage.elements.length > 0) {
-      const { templateId: _tid, params: _p, paramMeta: _m, ...rest } = candidate
-      return rest as Candidate
-    }
     return null
   }
 

@@ -14,11 +14,16 @@
   "dependencies": {
     "@pdf-sim/shared": "*",
     "@supabase/supabase-js": "^2.50.5",
+    "katex": "^0.18.4",
     "mathjs": "^14.9.1",
     "pdfjs-dist": "^4.8.69",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-pdf": "^9.2.1"
+    "react-markdown": "^10.1.0",
+    "react-pdf": "^9.2.1",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

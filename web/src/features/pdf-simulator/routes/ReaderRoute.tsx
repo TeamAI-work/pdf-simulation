@@ -1,6 +1,6 @@
 // web/src/features/pdf-simulator/routes/ReaderRoute.tsx
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { simApiClient, type SimAnnotation } from '../api.js'
 import { PdfPane } from '../components/PdfPane.js'
 import { SimFAB } from '../components/SimFAB.js'
@@ -8,7 +8,17 @@ import { SimDrawer } from '../components/SimDrawer.js'
 import { SimPanel } from '../components/SimPanel.js'
 import { ExplainPanel } from '../components/ExplainPanel.js'
 import { SplitResizer } from '../components/SplitResizer.js'
+import { RightPanel } from '../components/RightPanel.js'
+import { ChatPane } from '../components/ChatPane.js'
 import { TextSelectionExplainer } from '../components/TextSelectionExplainer.js'
+import type { ChatMessage, RightTab } from '../types/chat.js'
+import {
+  buildSimExplainPrompt,
+  CHAT_ERROR_CONTENT,
+  coerceDomain,
+  formatSelectionReply,
+  toChatApiMessages,
+} from '../utils/chatHelpers.js'
 
 export interface ReaderRouteProps {
   bookId?: string
@@ -36,8 +46,12 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
   })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [selectedAnnotation, setSelectedAnnotation] = useState<SimAnnotation | null>(null)
-  const [splitWidthPercentage, setSplitWidthPercentage] = useState<number>(55)
+  const [splitWidthPercentage, setSplitWidthPercentage] = useState<number>(60)
   const [isAnimationVisible, setIsAnimationVisible] = useState<boolean>(true)
+  const [activeTab, setActiveTab] = useState<RightTab>('chat')
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [isChatLoading, setIsChatLoading] = useState(false)
+  const chatInFlightRef = useRef(false)
 
   // Load annotations for the book into memory cache (KP-11 & Acceptance Gate 6)
   useEffect(() => {
@@ -83,6 +97,7 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
 
   const handleSelectSimulation = (annotation: SimAnnotation) => {
     setSelectedAnnotation(annotation)
+    setActiveTab('sim')
     setIsDrawerOpen(false)
   }
 
@@ -135,7 +150,170 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
     }
   }
 
-  const hasActiveSim = Boolean(selectedAnnotation)
+  const parentTopic = selectedAnnotation?.spec.parentTopic || bookTitle
+  const domain = coerceDomain(selectedAnnotation?.spec.domain)
+
+  const failLoadingMessage = (loadingId: string) => {
+    setChatMessages((prev) =>
+      prev.map((m) =>
+        m.id === loadingId
+          ? { ...m, isLoading: false, isError: true, content: CHAT_ERROR_CONTENT }
+          : m
+      )
+    )
+  }
+
+  const handleSendChatMessage = async (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed || isChatLoading || chatInFlightRef.current) return
+    chatInFlightRef.current = true
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: trimmed,
+      timestamp: new Date(),
+    }
+    const loadingId = crypto.randomUUID()
+    const loadingMsg: ChatMessage = {
+      id: loadingId,
+      role: 'ai',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true,
+    }
+
+    setChatMessages((prev) => [...prev, userMsg, loadingMsg])
+    setIsChatLoading(true)
+
+    try {
+      const result = await simApiClient.sendChatMessage({
+        messages: toChatApiMessages([...chatMessages, userMsg]),
+        bookContext: {
+          title: bookTitle,
+          currentPage,
+          parentTopic,
+          domain,
+        },
+      })
+      const reply = result.reply?.trim()
+      if (!reply) {
+        failLoadingMessage(loadingId)
+        return
+      }
+      setChatMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingId
+            ? {
+                ...m,
+                isLoading: false,
+                content: reply,
+                relatedFormulas: result.relatedFormulas,
+                keyTakeaways: result.keyTakeaways,
+              }
+            : m
+        )
+      )
+    } catch (err) {
+      console.error('[ReaderRoute] Chat send failed:', err)
+      failLoadingMessage(loadingId)
+    } finally {
+      chatInFlightRef.current = false
+      setIsChatLoading(false)
+    }
+  }
+
+  const handleInjectToChat = async (selectedText: string, page: number, context: string) => {
+    setActiveTab('chat')
+    if (isChatLoading || chatInFlightRef.current) return
+    chatInFlightRef.current = true
+
+    const pill: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'system',
+      content: selectedText,
+      timestamp: new Date(),
+      sourceHighlight: { text: selectedText, page },
+    }
+    const loadingId = crypto.randomUUID()
+    const loadingMsg: ChatMessage = {
+      id: loadingId,
+      role: 'ai',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true,
+    }
+
+    setChatMessages((prev) => [...prev, pill, loadingMsg])
+    setIsChatLoading(true)
+
+    try {
+      const result = await simApiClient.explainSelectionText({
+        selectedText,
+        surroundingContext: context,
+        parentTopic,
+        domain,
+      })
+      setChatMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingId
+            ? {
+                ...m,
+                isLoading: false,
+                content: formatSelectionReply(result),
+                relatedFormulas: result.relatedFormulas,
+                keyTakeaways: result.keyTakeaways,
+                conceptTitle: result.conceptTitle,
+                selectedText,
+                surroundingContext: context,
+              }
+            : m
+        )
+      )
+    } catch (err) {
+      console.error('[ReaderRoute] Highlight inject failed:', err)
+      failLoadingMessage(loadingId)
+    } finally {
+      chatInFlightRef.current = false
+      setIsChatLoading(false)
+    }
+  }
+
+  const handleClearChat = () => {
+    chatInFlightRef.current = false
+    setChatMessages([])
+    setIsChatLoading(false)
+  }
+
+  const handleAddNote = (_selectedText: string, _page: number) => {
+    setActiveTab('notes')
+  }
+
+  const handleChatAboutSim = () => {
+    if (!selectedAnnotation) return
+    const prompt = buildSimExplainPrompt(selectedAnnotation.spec, selectedAnnotation.quote)
+    setActiveTab('chat')
+    void handleSendChatMessage(prompt)
+  }
+
+  const simTabContent = selectedAnnotation ? (
+    <div className="sim-tab">
+      <SimPanel
+        spec={selectedAnnotation.spec}
+        onClose={() => setSelectedAnnotation(null)}
+        onRegenerateWithAi={handleRegenerateCurrentSim}
+        isAnimationVisible={isAnimationVisible}
+        onToggleAnimation={() => setIsAnimationVisible((v) => !v)}
+      />
+      <ExplainPanel
+        spec={selectedAnnotation.spec}
+        quote={selectedAnnotation.quote}
+        isSimAnimationVisible={isAnimationVisible}
+        onToggleSimAnimation={() => setIsAnimationVisible((v) => !v)}
+        onChatAboutSim={handleChatAboutSim}
+      />
+    </div>
+  ) : null
 
   return (
     <div className="reader-layout">
@@ -143,7 +321,7 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
       <div
         className="reader-pdf-container"
         style={{
-          width: hasActiveSim ? `${splitWidthPercentage}%` : '100%',
+          width: `${splitWidthPercentage}%`,
           transition: 'width 0.1s ease',
         }}
       >
@@ -176,43 +354,39 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({
         />
       </div>
 
-      {/* Draggable Resizer when Simulation is active */}
-      {hasActiveSim && (
-        <SplitResizer
-          onResize={(newWidth) => setSplitWidthPercentage(newWidth)}
-          minPercentage={35}
-          maxPercentage={75}
+      <SplitResizer
+        onResize={(newWidth) => setSplitWidthPercentage(newWidth)}
+        minPercentage={35}
+        maxPercentage={75}
+      />
+
+      {/* Right: Chat / Sim / Notes workspace */}
+      <div
+        className="reader-sim-container"
+        style={{
+          width: `${100 - splitWidthPercentage}%`,
+        }}
+      >
+        <RightPanel
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          chat={
+            <ChatPane
+              messages={chatMessages}
+              isLoading={isChatLoading}
+              bookTitle={bookTitle}
+              onSendMessage={handleSendChatMessage}
+              onClear={handleClearChat}
+            />
+          }
+          sim={simTabContent}
         />
-      )}
+      </div>
 
-      {/* Right: Simulation & Explanation Workspace */}
-      {hasActiveSim && (
-        <div
-          className="reader-sim-container"
-          style={{
-            width: `${100 - splitWidthPercentage}%`,
-          }}
-        >
-          <SimPanel
-            spec={selectedAnnotation?.spec || null}
-            onClose={() => setSelectedAnnotation(null)}
-            onRegenerateWithAi={handleRegenerateCurrentSim}
-            isAnimationVisible={isAnimationVisible}
-            onToggleAnimation={() => setIsAnimationVisible((v) => !v)}
-          />
-          <ExplainPanel
-            spec={selectedAnnotation?.spec || null}
-            quote={selectedAnnotation?.quote}
-            isSimAnimationVisible={isAnimationVisible}
-            onToggleSimAnimation={() => setIsAnimationVisible((v) => !v)}
-          />
-        </div>
-      )}
-
-      {/* Floating Text Selection Mini Button & Explainer Modal */}
       <TextSelectionExplainer
-        parentTopic={selectedAnnotation?.spec.parentTopic || bookTitle}
-        domain={selectedAnnotation?.spec.domain || 'physics'}
+        currentPage={currentPage}
+        onExplain={handleInjectToChat}
+        onAddNote={handleAddNote}
       />
     </div>
   )

@@ -13,6 +13,7 @@ export const Circle: React.FC<{ element: ResolvedElement }> = ({ element }) => {
       fill={props.fill ?? '#38bdf8'}
       stroke={props.stroke ?? 'none'}
       strokeWidth={props.strokeWidth ?? 1}
+      strokeDasharray={props.strokeDasharray ?? undefined}
       opacity={props.opacity ?? 1}
     />
   )

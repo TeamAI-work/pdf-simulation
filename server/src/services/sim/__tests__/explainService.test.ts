@@ -5,6 +5,8 @@ import {
   generateProceduralStudentExplanation,
   generateProceduralSelectionExplanation,
   generateStudentExplanation,
+  generateProceduralChatReply,
+  generateProceduralSimBrief,
 } from '../explainService.js'
 import type { SimSpec } from '@pdf-sim/shared'
 
@@ -95,6 +97,49 @@ describe('Student Explanation Service', () => {
     expect(result.summary).toBeDefined()
     expect(result.detailedExplanation.length).toBeGreaterThan(0)
     expect(result.keyTakeaways.length).toBeGreaterThan(0)
+  })
+
+  it('procedural chat reply uses the last user turn and book context', () => {
+    const result = generateProceduralChatReply(
+      [
+        { role: 'user', content: 'What is inertia?' },
+        { role: 'assistant', content: 'Inertia resists changes in motion.' },
+        { role: 'user', content: 'How does friction change that?' },
+      ],
+      { title: 'Physics 101', parentTopic: 'Newton laws', domain: 'physics' }
+    )
+
+    expect(result.reply).toContain('How does friction change that?')
+    expect(result.reply).toContain('Newton laws')
+    expect(result.reply).toContain('| Piece |')
+    expect(result.keyTakeaways?.length).toBeGreaterThan(0)
+  })
+
+  it('procedural sim brief covers what it is and how it works', () => {
+    const result = generateProceduralSimBrief(testSpec, testSpec.quote)
+    expect(result.about).toContain('Harmonic Oscillator')
+    expect(result.howItWorks.length).toBeGreaterThan(40)
+    expect(result.howItWorks).toContain('Hooke')
+  })
+
+  it('mentions extracted textbook params such as 20 m/s', () => {
+    const spec: SimSpec = {
+      ...testSpec,
+      templateId: 'projectile_2d',
+      params: { v0: 20, angleDeg: 45, h0: 0, g: 9.81 },
+      paramMeta: {
+        v0: { source: 'extracted', unit: 'm/s' },
+        angleDeg: { source: 'extracted' },
+        h0: { source: 'default' },
+        g: { source: 'default' },
+      },
+    }
+    const result = generateProceduralStudentExplanation(spec, spec.quote, 'standard', undefined, {
+      range: 40.77,
+    })
+    expect(result.keyTakeaways.join(' ')).toContain('20')
+    expect(result.keyTakeaways.join(' ')).toContain('from the textbook')
+    expect(result.keyTakeaways.join(' ')).toContain('range = 40.77')
   })
 })
 

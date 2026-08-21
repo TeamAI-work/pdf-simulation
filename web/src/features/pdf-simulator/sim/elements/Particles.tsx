@@ -40,8 +40,18 @@ export const Particles: React.FC<{ element: ResolvedElement }> = ({ element }) =
   return (
     <g id={element.id} opacity={props.opacity ?? 1}>
       {particleConfigs.slice(0, count).map((cfg, idx) => {
-        const px = cx + cfg.baseX + Math.sin(time * speed * cfg.freqX + cfg.phase) * cfg.ampX
-        const py = cy + cfg.baseY + Math.cos(time * speed * cfg.freqY + cfg.phase) * cfg.ampY
+        const halfW = Math.max(0, width / 2 - radius)
+        const halfH = Math.max(0, height / 2 - radius)
+        const ampX = Math.min(cfg.ampX, halfW)
+        const ampY = Math.min(cfg.ampY, halfH)
+        const px = Math.min(
+          cx + halfW,
+          Math.max(cx - halfW, cx + cfg.baseX + Math.sin(time * speed * cfg.freqX + cfg.phase) * ampX)
+        )
+        const py = Math.min(
+          cy + halfH,
+          Math.max(cy - halfH, cy + cfg.baseY + Math.cos(time * speed * cfg.freqY + cfg.phase) * ampY)
+        )
 
         return (
           <circle

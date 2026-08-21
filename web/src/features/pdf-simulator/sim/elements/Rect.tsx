@@ -17,6 +17,7 @@ export const Rect: React.FC<{ element: ResolvedElement }> = ({ element }) => {
       stroke={props.stroke ?? 'none'}
       strokeWidth={props.strokeWidth ?? 1}
       opacity={props.opacity ?? 1}
+      transform={props.transform ?? undefined}
     />
   )
 }

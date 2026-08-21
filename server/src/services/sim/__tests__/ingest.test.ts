@@ -80,15 +80,22 @@ describe('Ingest Service: normalizeTemplateCandidate', () => {
     expect(normalizeTemplateCandidate(cand)).toBeNull()
   })
 
-  it('keeps SVG fallback when templateId is unknown but stage is valid', () => {
+  it('drops unknown templateId even when a cartoon stage is present', () => {
     const cand: Candidate = {
       ...physicsFixture,
       importance: 8,
       templateId: 'wormhole_drive',
     }
-    const normalized = normalizeTemplateCandidate(cand)
-    expect(normalized?.templateId).toBeUndefined()
-    expect(normalized?.stage?.elements.length).toBeGreaterThan(0)
+    expect(normalizeTemplateCandidate(cand)).toBeNull()
+  })
+
+  it('drops simulatable candidates that have no templateId', () => {
+    const cand: Candidate = {
+      ...physicsFixture,
+      importance: 8,
+      templateId: undefined,
+    }
+    expect(normalizeTemplateCandidate(cand)).toBeNull()
   })
 })
 

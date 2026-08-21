@@ -20,7 +20,10 @@ import { validateMathExpressions } from '../services/sim/ingest.js'
 import {
   generateStudentExplanation,
   generateSelectionExplanation,
+  generateChatReply,
+  generateSimBrief,
 } from '../services/sim/explainService.js'
+import { bindTemplate, isTemplateId } from '@pdf-sim/shared'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -321,12 +324,17 @@ simulationRouter.post('/explain', async (req: Request, res: Response): Promise<v
     }
 
     console.log(`[routes] Generating student explanation for: "${spec.title}" (mode: ${mode || 'standard'})`)
+    const metrics =
+      spec.templateId && isTemplateId(spec.templateId)
+        ? bindTemplate(spec.templateId, spec.params).metrics
+        : undefined
     const explanation = await generateStudentExplanation({
       spec,
       quote,
       pageText,
       mode: mode || 'standard',
       customQuestion,
+      metrics,
     })
 
     res.json({
@@ -369,6 +377,67 @@ simulationRouter.post('/explain-selection', async (req: Request, res: Response):
   } catch (err: any) {
     console.error('[routes] Error generating selection explanation:', err)
     res.status(500).json({ error: err?.message || 'Failed to generate selection explanation' })
+  }
+})
+
+/**
+ * POST /sim/chat
+ * Multi-turn tutor reply using full conversation history.
+ */
+simulationRouter.post('/chat', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { messages, bookContext } = req.body || {}
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      res.status(400).json({ error: 'messages array is required' })
+      return
+    }
+
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'user' || !String(last.content || '').trim()) {
+      res.status(400).json({ error: 'The last message must be a non-empty user turn' })
+      return
+    }
+
+    const title = bookContext?.title || bookContext?.parentTopic || 'general'
+    console.log(`[routes] Chat reply (${messages.length} turns, topic: ${title})`)
+
+    const result = await generateChatReply(messages, bookContext || {})
+
+    res.json({
+      success: true,
+      reply: result.reply,
+      relatedFormulas: result.relatedFormulas,
+      keyTakeaways: result.keyTakeaways,
+    })
+  } catch (err: any) {
+    console.error('[routes] Error generating chat reply:', err)
+    res.status(500).json({ error: err?.message || 'Failed to generate chat reply' })
+  }
+})
+
+/**
+ * POST /sim/sim-brief
+ * Short "what this is" + "how it works here" for the Sim tab (not the full tutor essay).
+ */
+simulationRouter.post('/sim-brief', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { spec, quote } = req.body || {}
+    if (!spec || !spec.title) {
+      res.status(400).json({ error: 'A valid SimSpec with title is required' })
+      return
+    }
+
+    console.log(`[routes] Generating sim brief for: "${spec.title}"`)
+    const brief = await generateSimBrief(spec, quote)
+
+    res.json({
+      success: true,
+      brief,
+    })
+  } catch (err: any) {
+    console.error('[routes] Error generating sim brief:', err)
+    res.status(500).json({ error: err?.message || 'Failed to generate sim brief' })
   }
 })
 

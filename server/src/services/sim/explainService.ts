@@ -63,7 +63,51 @@ export interface ExplainOptions {
   pageText?: string
   mode?: 'beginner' | 'standard' | 'advanced'
   customQuestion?: string
+  metrics?: Record<string, number | string | boolean>
 }
+
+function formatBookNumbers(
+  spec: SimSpec,
+  metrics?: Record<string, number | string | boolean>
+): string {
+  const params = spec.params || {}
+  const meta = spec.paramMeta || {}
+  const paramBits = Object.entries(params).map(([k, v]) => {
+    const src = meta[k]?.source === 'extracted' ? 'from the textbook' : 'catalog default'
+    return `${k} = ${v} (${src})`
+  })
+  const metricBits = Object.entries(metrics || {}).map(([k, v]) => `${k} = ${v}`)
+  const parts = [
+    paramBits.length ? `Textbook / slider params: ${paramBits.join(', ')}` : '',
+    metricBits.length ? `Computed metrics (use these numbers in the explanation): ${metricBits.join(', ')}` : '',
+  ].filter(Boolean)
+  return parts.join('\n')
+}
+
+export interface ChatTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatBookContext {
+  title?: string
+  currentPage?: number
+  parentTopic?: string
+  domain?: string
+}
+
+export interface ChatReply {
+  reply: string
+  relatedFormulas?: string[]
+  keyTakeaways?: string[]
+}
+
+export interface SimBrief {
+  about: string
+  howItWorks: string
+}
+
+const MAX_CHAT_TURNS = 24
 
 /**
  * Procedural fallback student explanation generator for high reliability when LLMs are unavailable.
@@ -72,10 +116,12 @@ export function generateProceduralStudentExplanation(
   spec: SimSpec,
   quote?: string,
   mode: 'beginner' | 'standard' | 'advanced' = 'standard',
-  customQuestion?: string
+  customQuestion?: string,
+  metrics?: Record<string, number | string | boolean>
 ): StudentExplanation {
   const domain = spec.domain || 'physics'
   const title = spec.title || 'Scientific Concept'
+  const numbers = formatBookNumbers(spec, metrics)
 
   // Extract variables from equations if available
   const equationBreakdowns: EquationBreakdown[] = (spec.equations || []).map((eq) => {
@@ -158,7 +204,9 @@ export function generateProceduralStudentExplanation(
     },
     keyTakeaways: [
       `${title} operates deterministically as a function of elapsed time and physical constraints.`,
-      `The visual components in the stage reflect exact algebraic balance.`,
+      numbers
+        ? `Explain using spec.params and computed metrics only. ${numbers}`
+        : `The visual components in the stage reflect exact algebraic balance.`,
       `Understanding this foundational principle simplifies advanced topics across ${domain}.`,
     ],
     tutorAnswer,
@@ -169,11 +217,13 @@ export function generateProceduralStudentExplanation(
  * Builds the comprehensive educational prompt for the LLM.
  */
 function buildPrompt(options: ExplainOptions): { systemPrompt: string; userPrompt: string } {
-  const { spec, quote, pageText, mode = 'standard', customQuestion } = options
+  const { spec, quote, pageText, mode = 'standard', customQuestion, metrics } = options
+  const bookNumbers = formatBookNumbers(spec, metrics)
 
   const systemPrompt = `You are a world-class STEM professor and educational explainer known for making physics, chemistry, mathematics, and science crystal-clear, fascinating, and deeply intuitive for high-school and undergraduate students.
 
 Your objective: Explain the interactive visual simulation provided below with utmost clarity, pedagogical rigor, and relatable intuition.
+Explain using spec.params and computed metrics only. Walk through those textbook numbers; do not invent replacements.
 
 Respond ONLY with a valid, clean JSON object matching this structure (no markdown formatting fences, just pure JSON):
 {
@@ -219,6 +269,7 @@ Parent Topic: ${spec.parentTopic || ''}
 Governing Equations: ${(spec.equations || []).join('; ') || 'None provided'}
 Initial Concept Note: ${spec.topicExplanation || ''}
 Visual Caption: ${spec.caption || ''}
+${bookNumbers ? `${bookNumbers}\n` : ''}
 Stage Elements: ${JSON.stringify(spec.stage?.elements || []).substring(0, 500)}
 ${quote ? `Textbook Excerpt: "${quote}"\n` : ''}
 ${pageText ? `Page Context: "${pageText.substring(0, 400)}"\n` : ''}
@@ -240,10 +291,62 @@ function cleanJson(raw: string): string {
   return trimmed
 }
 
+/** Chat + explain paths use Groq first for latency. Classify pipeline stays OpenRouter-first. */
+function groqChatModel(): string {
+  return process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
+}
+
+type LlmChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
+
+async function tryGroqJsonFromMessages(
+  llmMessages: LlmChatMessage[],
+  label: string
+): Promise<unknown | null> {
+  if (!process.env.GROQ_API_KEY) return null
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+    })
+    const model = groqChatModel()
+    console.log(`[explainService] ${label} via Groq (${model})`)
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: llmMessages,
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+    })
+    const text = completion.choices[0]?.message?.content || ''
+    return JSON.parse(cleanJson(text))
+  } catch (err: any) {
+    console.warn(`[explainService] Groq ${label} failed, falling back:`, err?.message || err)
+    return null
+  }
+}
+
+async function tryGroqJson(systemPrompt: string, userPrompt: string, label: string): Promise<unknown | null> {
+  return tryGroqJsonFromMessages(
+    [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    label
+  )
+}
+
 export async function generateStudentExplanation(options: ExplainOptions): Promise<StudentExplanation> {
   const { systemPrompt, userPrompt } = buildPrompt(options)
 
-  // 1. Try OpenRouter
+  // 1. Groq first — chat follow-ups and tutor Q&A need low latency
+  const groqParsed = await tryGroqJson(systemPrompt, userPrompt, 'student explanation')
+  if (groqParsed && typeof groqParsed === 'object' && groqParsed !== null) {
+    const parsed = groqParsed as StudentExplanation
+    if (parsed.summary && parsed.intuition) {
+      return parsed
+    }
+  }
+
+  // 2. Try OpenRouter
   if (process.env.OPENROUTER_API_KEY) {
     try {
       const openai = new OpenAI({
@@ -270,34 +373,7 @@ export async function generateStudentExplanation(options: ExplainOptions): Promi
         return parsed as StudentExplanation
       }
     } catch (err: any) {
-      console.warn('[explainService] OpenRouter failed, trying Groq/Gemini:', err?.message || err)
-    }
-  }
-
-  // 2. Try Groq
-  if (process.env.GROQ_API_KEY) {
-    try {
-      const openai = new OpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-      })
-      const model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
-      const completion = await openai.chat.completions.create({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-      })
-      const text = completion.choices[0]?.message?.content || ''
-      const cleaned = cleanJson(text)
-      const parsed = JSON.parse(cleaned)
-      if (parsed.summary && parsed.intuition) {
-        return parsed as StudentExplanation
-      }
-    } catch (err: any) {
-      console.warn('[explainService] Groq failed, trying Gemini:', err?.message || err)
+      console.warn('[explainService] OpenRouter failed, trying Gemini:', err?.message || err)
     }
   }
 
@@ -327,7 +403,7 @@ export async function generateStudentExplanation(options: ExplainOptions): Promi
   }
 
   // Fallback
-  return generateProceduralStudentExplanation(options.spec, options.quote, options.mode, options.customQuestion)
+  return generateProceduralStudentExplanation(options.spec, options.quote, options.mode, options.customQuestion, options.metrics)
 }
 
 /**
@@ -369,25 +445,33 @@ export async function generateSelectionExplanation(
 ): Promise<SelectionExplanation> {
   const { selectedText, surroundingContext, parentTopic, domain = 'physics', mode = 'standard' } = options
 
-  const systemPrompt = `You are a world-class STEM educator. A student highlighted a specific term, phrase, or sentence from their textbook.
-Your task is to provide a clear, intuitive, and pedagogically rich explanation of the selected text in the context of the surrounding material.
+  const systemPrompt = `You are a friendly STEM tutor for high-school and first-year college students. A student highlighted a term, phrase, or sentence in their textbook.
 
-Respond ONLY with a valid JSON object matching this schema (no markdown fences, pure JSON):
+Explain it so they understand it the first time:
+- Use simple everyday language. Define any jargon in one short phrase.
+- Lead with a plain-English meaning, then a real-life example (sports, vehicles, phones, cooking, weather).
+- Make the idea easier with a short analogy and, if useful, a tiny step-by-step.
+- Keep it short. Prefer bullets or a small comparison table over a long essay.
+
+Inside detailedExplanation strings you MAY use GitHub-flavored Markdown: bullet lists, numbered lists, **bold** key terms, and pipe tables. Do not wrap the JSON in markdown fences.
+Write formulas in LaTeX with dollar signs: inline $F = ma$, display $$F_{net} = ma$$. Never put math in backticks.
+
+Respond ONLY with a valid JSON object matching this schema (pure JSON):
 {
   "selectedText": "the selected text",
   "conceptTitle": "A clear, concise title for this concept (3-6 words)",
   "domain": "physics|chemistry|math|general",
-  "summary": "1 crisp, memorable sentence explaining what this selected text means",
+  "summary": "1 simple sentence a student could repeat to a friend",
   "detailedExplanation": [
-    "Paragraph 1: Clear, intuitive explanation with a real-world analogy",
-    "Paragraph 2: Detailed explanation of how this works and why it matters in this context"
+    "Everyday analogy + real-life example (markdown bullets OK)",
+    "How it works in this textbook context; a small markdown table if comparing cases"
   ],
   "keyTakeaways": [
-    "Bullet point 1",
+    "Bullet point 1 in simple words",
     "Bullet point 2",
     "Bullet point 3"
   ],
-  "realWorldExample": "A practical everyday or modern engineering example of this concept",
+  "realWorldExample": "One concrete everyday or modern-engineering example",
   "relatedFormulas": ["optional relevant formula in LaTeX/plain text if applicable"]
 }`
 
@@ -399,7 +483,16 @@ ${surroundingContext ? `Surrounding Page / Paragraph Context: "${surroundingCont
 
 Explain this highlighted text clearly for the student.`
 
-  // 1. Try OpenRouter
+  // 1. Groq first — ChatPane + PDF highlight inject
+  const groqParsed = await tryGroqJson(systemPrompt, userPrompt, 'selection explanation')
+  if (groqParsed && typeof groqParsed === 'object' && groqParsed !== null) {
+    const parsed = groqParsed as SelectionExplanation
+    if (parsed.summary && parsed.detailedExplanation) {
+      return parsed
+    }
+  }
+
+  // 2. Try OpenRouter
   if (process.env.OPENROUTER_API_KEY) {
     try {
       const openai = new OpenAI({
@@ -426,34 +519,7 @@ Explain this highlighted text clearly for the student.`
         return parsed as SelectionExplanation
       }
     } catch (err: any) {
-      console.warn('[explainService] OpenRouter selection explanation failed, trying Groq/Gemini:', err?.message || err)
-    }
-  }
-
-  // 2. Try Groq
-  if (process.env.GROQ_API_KEY) {
-    try {
-      const openai = new OpenAI({
-        apiKey: process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-      })
-      const model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
-      const completion = await openai.chat.completions.create({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-      })
-      const text = completion.choices[0]?.message?.content || ''
-      const cleaned = cleanJson(text)
-      const parsed = JSON.parse(cleaned)
-      if (parsed.summary && parsed.detailedExplanation) {
-        return parsed as SelectionExplanation
-      }
-    } catch (err: any) {
-      console.warn('[explainService] Groq selection explanation failed, trying Gemini:', err?.message || err)
+      console.warn('[explainService] OpenRouter selection explanation failed, trying Gemini:', err?.message || err)
     }
   }
 
@@ -484,4 +550,230 @@ Explain this highlighted text clearly for the student.`
 
   return generateProceduralSelectionExplanation(options)
 }
+
+function sanitizeChatTurns(messages: ChatTurn[]): ChatTurn[] {
+  return messages
+    .filter(
+      (m) =>
+        m &&
+        (m.role === 'user' || m.role === 'assistant') &&
+        typeof m.content === 'string' &&
+        m.content.trim().length > 0
+    )
+    .map((m) => ({ role: m.role, content: m.content.trim() }))
+    .slice(-MAX_CHAT_TURNS)
+}
+
+function buildChatSystemPrompt(bookContext: ChatBookContext): string {
+  const title = bookContext.title || 'this textbook'
+  const domain = bookContext.domain || 'physics'
+  const topic = bookContext.parentTopic ? ` The student is currently studying: ${bookContext.parentTopic}.` : ''
+  const page =
+    typeof bookContext.currentPage === 'number' ? ` They are on page ${bookContext.currentPage}.` : ''
+
+  return `You are a friendly STEM tutor for high-school and first-year college students reading "${title}" (${domain}).${topic}${page}
+
+Write so a student who is stuck on this page can understand it the first time:
+- Use simple everyday language. Avoid jargon; if you must use a term, define it in one short phrase.
+- Start with the idea in plain English, then add just enough detail to make it click.
+- Always include at least one real-life example (sports, vehicles, phones, cooking, weather, or something they already know).
+- Make the concept easier with a short analogy, then a tiny step-by-step if it helps.
+- Keep answers focused. Prefer 1 short intro + bullets or a small table over a long essay.
+- Use earlier turns for continuity. If a prior message is tagged as a PDF highlight, that passage is the current focus.
+
+Format the "reply" string with GitHub-flavored Markdown (this is rendered in the chat UI):
+- Use bullet lists (- item) or numbered lists for steps and takeaways.
+- Use a markdown table when comparing two or more ideas (e.g. with vs without friction).
+- You may use **bold** for key terms. Do not wrap the whole reply in a code fence.
+- Write every formula in LaTeX with dollar signs so it renders as math: inline $F = ma$, display $$\\vec{F}_{net} = m\\vec{a}$$.
+- Never put formulas in backticks or a boxed/code style. Do not wrap math in \\( \\) if you can use $ $.
+
+Respond ONLY with a valid JSON object (no markdown fences around the JSON):
+{
+  "reply": "Markdown answer with bullets and/or a small table, plus a real-life example. Math uses $...$.",
+  "relatedFormulas": ["F = ma"],
+  "keyTakeaways": ["optional 1-3 short bullets"]
+}`
+}
+
+function asChatReply(parsed: unknown): ChatReply | null {
+  if (!parsed || typeof parsed !== 'object') return null
+  const reply = (parsed as { reply?: unknown }).reply
+  if (typeof reply !== 'string' || !reply.trim()) return null
+  const formulas = (parsed as { relatedFormulas?: unknown }).relatedFormulas
+  const takeaways = (parsed as { keyTakeaways?: unknown }).keyTakeaways
+  return {
+    reply: reply.trim(),
+    relatedFormulas: Array.isArray(formulas)
+      ? formulas.filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+      : undefined,
+    keyTakeaways: Array.isArray(takeaways)
+      ? takeaways.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+      : undefined,
+  }
+}
+
+export function generateProceduralChatReply(
+  messages: ChatTurn[],
+  bookContext: ChatBookContext = {}
+): ChatReply {
+  const lastUser = [...sanitizeChatTurns(messages)].reverse().find((m) => m.role === 'user')
+  const topic = bookContext.parentTopic || bookContext.title || bookContext.domain || 'this topic'
+  const question = lastUser?.content || 'your question'
+  return {
+    reply: `In the context of **${topic}**, here is a simple way to think about "${question}":
+
+- It connects to the main idea on this page of the textbook.
+- Picture a real-life version of the same idea (a moving car, a phone, or a ball you throw).
+- This is a local fallback while the AI tutor is unavailable.
+
+| Piece | What to notice |
+| --- | --- |
+| Your question | ${question.slice(0, 80)} |
+| Context | ${topic} |`,
+    relatedFormulas: [],
+    keyTakeaways: [`Focus: ${question.slice(0, 80)}`, `Context: ${topic}`],
+  }
+}
+
+/**
+ * Multi-turn tutor reply. Sends the conversation history so the model can reference prior turns.
+ * Cascade: Groq → OpenRouter → Gemini → procedural.
+ */
+export async function generateChatReply(
+  messages: ChatTurn[],
+  bookContext: ChatBookContext = {}
+): Promise<ChatReply> {
+  const turns = sanitizeChatTurns(messages)
+  if (turns.length === 0 || turns[turns.length - 1].role !== 'user') {
+    return generateProceduralChatReply(turns, bookContext)
+  }
+
+  const systemPrompt = buildChatSystemPrompt(bookContext)
+  const llmMessages: LlmChatMessage[] = [{ role: 'system', content: systemPrompt }, ...turns]
+
+  const groqParsed = await tryGroqJsonFromMessages(llmMessages, 'chat reply')
+  const groqReply = asChatReply(groqParsed)
+  if (groqReply) return groqReply
+
+  if (process.env.OPENROUTER_API_KEY) {
+    try {
+      const openai = new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://github.com/pdf-simulation',
+          'X-Title': 'PDF Simulation Chat',
+        },
+      })
+      const model = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-lightning:free'
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: llmMessages,
+        temperature: 0.3,
+      })
+      const text = completion.choices[0]?.message?.content || ''
+      const parsed = JSON.parse(cleanJson(text))
+      const reply = asChatReply(parsed)
+      if (reply) return reply
+    } catch (err: any) {
+      console.warn('[explainService] OpenRouter chat failed, trying Gemini:', err?.message || err)
+    }
+  }
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash'
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.3,
+        },
+      })
+      const contents = turns.map((turn) => ({
+        role: turn.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: turn.content }],
+      }))
+      const result = await model.generateContent({ contents })
+      const text = result.response.text()
+      const parsed = JSON.parse(cleanJson(text))
+      const reply = asChatReply(parsed)
+      if (reply) return reply
+    } catch (err: any) {
+      console.warn('[explainService] Gemini chat failed, using procedural fallback:', err?.message || err)
+    }
+  }
+
+  return generateProceduralChatReply(turns, bookContext)
+}
+
+export function generateProceduralSimBrief(spec: SimSpec, quote?: string): SimBrief {
+  const title = spec.title || 'this concept'
+  const excerpt = (quote || spec.quote || '').trim()
+  const aboutBits = [
+    `This simulation is about **${title}**${spec.subtitle ? `: ${spec.subtitle}` : '.'}`,
+    spec.caption || spec.topicExplanation || 'Watch the moving parts to see how the idea plays out over time.',
+  ]
+  const howBits = [
+    spec.topicExplanation
+      ? spec.topicExplanation
+      : `In this animation, the on-screen motion follows the same rules as ${title} in the textbook.`,
+    spec.equations && spec.equations.length > 0
+      ? `The key relationship is $${spec.equations[0]}$. When a value in that formula changes, the animation path changes with it.`
+      : 'Each moving piece stands for a real quantity (position, speed, or force). As time ticks, those quantities update together.',
+    excerpt ? `The textbook says: "${excerpt}"` : '',
+    formatBookNumbers(spec) || '',
+    'Try changing a slider if you have one: that is the same as changing a number in the formula and watching what nature would do.',
+  ]
+
+  return {
+    about: aboutBits.filter(Boolean).join('\n\n'),
+    howItWorks: howBits.filter(Boolean).join('\n\n'),
+  }
+}
+
+export async function generateSimBrief(spec: SimSpec, quote?: string): Promise<SimBrief> {
+  const excerpt = (quote || spec.quote || '').trim()
+  const systemPrompt = `You are a friendly STEM tutor for high-school students. Explain ONE simulation in two short sections.
+
+Rules:
+- Simple language. Define jargon in a short phrase.
+- Include one everyday example in howItWorks.
+- Use markdown: short paragraphs, bullets, **bold** key terms, and $LaTeX$ for formulas.
+- Do NOT write a long essay. about: 3–5 sentences. howItWorks: 1 short intro + 3–5 bullets.
+
+Respond ONLY with JSON (no markdown fences around the JSON):
+{
+  "about": "What this simulation is showing and why it exists.",
+  "howItWorks": "How the topic works in THIS animation (what moves, what the formula means, one real-life example)."
+}`
+
+  const userPrompt = `Title: ${spec.title}
+Subtitle: ${spec.subtitle || ''}
+Domain: ${spec.domain || 'physics'}
+Topic notes: ${spec.topicExplanation || ''}
+Caption: ${spec.caption || ''}
+Equations: ${(spec.equations || []).join('; ') || 'none'}
+Textbook excerpt: ${excerpt || 'none'}
+${formatBookNumbers(spec)}
+Stage elements: ${JSON.stringify(spec.stage?.elements || []).substring(0, 400)}
+
+Write the two-section student brief.`
+
+  const parsed = await tryGroqJson(systemPrompt, userPrompt, 'sim brief')
+  if (parsed && typeof parsed === 'object' && parsed !== null) {
+    const about = (parsed as { about?: unknown }).about
+    const howItWorks = (parsed as { howItWorks?: unknown }).howItWorks
+    if (typeof about === 'string' && about.trim() && typeof howItWorks === 'string' && howItWorks.trim()) {
+      return { about: about.trim(), howItWorks: howItWorks.trim() }
+    }
+  }
+
+  return generateProceduralSimBrief(spec, quote)
+}
+
+
 

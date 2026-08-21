@@ -7,7 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import OpenAI from 'openai'
 import { Candidate, CandidateSchema, CandidateListSchema } from './candidateSchema.js'
 import { generateProceduralSimSpec, type ConceptContext } from './proceduralSim.js'
-import { createTemplateSpec, isTemplateId, matchTemplateFromText, parseTemplateParams } from '@pdf-sim/shared'
+import { allowedTemplatePrompt, createTemplateSpec, isTemplateId, matchTemplateFromText, parseTemplateParams } from '@pdf-sim/shared'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,15 +15,16 @@ const __dirname = path.dirname(__filename)
 let cachedPrompt: string | null = null
 
 function getSystemPrompt(): string {
-  if (cachedPrompt) return cachedPrompt
-  try {
-    const promptPath = path.resolve(__dirname, '../../prompts/simspec.v3.md')
-    cachedPrompt = fs.readFileSync(promptPath, 'utf-8')
-    return cachedPrompt
-  } catch {
-    // Fallback if prompt file cannot be read directly
-    return 'You are an educational simulation curator. Analyze the textbook page text and output a JSON array of up to 3 simulation candidates with version 2.0 and importance 1-10.'
+  if (!cachedPrompt) {
+    try {
+      const promptPath = path.resolve(__dirname, '../../prompts/simspec.v3.md')
+      cachedPrompt = fs.readFileSync(promptPath, 'utf-8')
+    } catch {
+      cachedPrompt =
+        'You are an educational simulation curator. Output a JSON array of up to 3 candidates with version 2.0, a known templateId, extracted params, and importance 1-10. Never emit stage.elements.\n\n{{CATALOG}}'
+    }
   }
+  return cachedPrompt.replace('{{CATALOG}}', allowedTemplatePrompt())
 }
 
 export type LLMProvider = 'groq' | 'openrouter' | 'gemini' | 'openai'
@@ -340,7 +341,7 @@ export async function generateCustomSimulation(
       title: context.title || matched.title,
       subtitle: context.subtitle,
       parentTopic: context.parentTopic,
-      domain: (context.domain as Candidate['domain']) || 'physics',
+      domain: context.domain as Candidate['domain'] | undefined,
       topicExplanation: context.topicExplanation,
       equations: context.equations,
       quote: context.quote || promptOrText.substring(0, 200),
@@ -351,9 +352,9 @@ export async function generateCustomSimulation(
   const customSystemPrompt = `${getSystemPrompt()}
 
 IMPORTANT FOR ON-DEMAND GENERATION:
-Prefer a known templateId + params when the concept matches the catalog.
-If it does not match, return exactly ONE Candidate with isSimulatable true and a valid stage.elements SVG fallback.
-Do not invent an unknown templateId.`
+Pick exactly one known templateId + extracted params.
+If nothing matches, return one Candidate with isSimulatable false and a short reason.
+Do not invent stage.elements or an unknown templateId.`
 
   const queryText = context.title
     ? `Concept to animate:
@@ -382,9 +383,6 @@ Textbook Context / Quote: "${context.quote || promptOrText}"`
           paramMeta,
           stage: undefined,
         }
-      }
-      if (first.stage && first.stage.elements.length > 0) {
-        return first
       }
     }
   } catch (err: any) {

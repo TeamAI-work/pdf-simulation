@@ -10,10 +10,11 @@ import {
 import { ReaderRoute } from './features/pdf-simulator/routes/ReaderRoute.js'
 import { BookManager } from './features/pdf-simulator/components/BookManager.js'
 import { ChukPhysicsLabRoute } from './features/mcp-physics/routes/ChukPhysicsLabRoute.js'
+import { TemplatePlayground } from './features/pdf-simulator/routes/TemplatePlayground.js'
 import { simApiClient, type BookRecord, type SimAnnotation } from './features/pdf-simulator/api.js'
 
 export function App() {
-  const [activeScreen, setActiveScreen] = useState<'reader' | 'library' | 'lab'>('library')
+  const [activeScreen, setActiveScreen] = useState<'reader' | 'library' | 'lab' | 'templates'>('templates')
   const [selectedBook, setSelectedBook] = useState<BookRecord | null>(null)
   const [localFile, setLocalFile] = useState<File | null>(null)
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking')
@@ -159,6 +160,16 @@ export function App() {
 
           <button
             type="button"
+            onClick={() => setActiveScreen('templates')}
+            className={`tab-btn ${activeScreen === 'templates' ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <span>▶</span>
+            <span>Template preview</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveScreen('lab')}
             className={`tab-btn ${activeScreen === 'lab' ? 'active' : ''}`}
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
@@ -196,7 +207,9 @@ export function App() {
       </header>
 
       {/* Main Screen Views */}
-      {activeScreen === 'lab' ? (
+      {activeScreen === 'templates' ? (
+        <TemplatePlayground />
+      ) : activeScreen === 'lab' ? (
         <ChukPhysicsLabRoute onBack={() => setActiveScreen('reader')} />
       ) : activeScreen === 'library' ? (
         <BookManager

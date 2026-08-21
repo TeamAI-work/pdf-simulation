@@ -119,13 +119,22 @@ export const SimStage: React.FC<SimStageProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col items-center justify-center bg-slate-950 rounded-xl overflow-hidden border border-slate-800 select-none shadow-2xl ${className}`}
+      className={className}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        minHeight: 0,
+        display: 'flex',
+        background: '#f8fafc',
+        overflow: 'hidden',
+        userSelect: 'none',
+      }}
     >
-      {/* Dynamic SVG Canvas */}
       <svg
         viewBox={resolvedStage.viewBox}
-        className="w-full h-full max-h-[500px] object-contain"
         preserveAspectRatio="xMidYMid meet"
+        style={{ width: '100%', height: '100%', display: 'block' }}
       >
         <defs>
           {/* Subtle grid pattern background */}
@@ -138,20 +147,19 @@ export const SimStage: React.FC<SimStageProps> = ({
             <path
               d="M 25 0 L 0 0 0 25"
               fill="none"
-              stroke="#1e293b"
-              strokeWidth="0.5"
-              strokeDasharray="2 2"
+              stroke="#e2e8f0"
+              strokeWidth="1"
             />
           </pattern>
         </defs>
 
+        <rect x="-1000" y="-1000" width="3000" height="3000" fill="#f8fafc" />
         <rect
           x="-1000"
           y="-1000"
           width="3000"
           height="3000"
           fill="url(#sim-grid-pattern)"
-          opacity={0.7}
         />
 
         {/* Render elements */}

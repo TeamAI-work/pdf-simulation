@@ -167,3 +167,19 @@ describe('Classify Service: classifyPage execution & retries', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('generateCustomSimulation matcher path', () => {
+  it('binds a series quote to series_parallel without inventing a stage', async () => {
+    const { generateCustomSimulation } = await import('../classify.js')
+    const candidate = await generateCustomSimulation(
+      'Two resistors of 2 Ω and 3 Ω are connected in series across a 10 V battery.'
+    )
+    expect(candidate.templateId).toBe('series_parallel')
+    expect(candidate.params?.R1).toBe(2)
+    expect(candidate.params?.R2).toBe(3)
+    expect(candidate.params?.V).toBe(10)
+    expect(candidate.params?.mode).toBe(0)
+    expect(candidate.stage).toBeUndefined()
+    expect(candidate.isSimulatable).toBe(true)
+  })
+})

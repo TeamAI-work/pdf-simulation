@@ -18,6 +18,23 @@ export interface SimPanelProps {
   onToggleAnimation?: () => void
 }
 
+function formatMetricKey(key: string): string {
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function formatMetricValue(value: number | string | boolean): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return '—'
+    if (Number.isInteger(value)) return String(value)
+    return Math.abs(value) >= 100 ? value.toFixed(1) : value.toFixed(2)
+  }
+  return String(value)
+}
+
 function textbookParams(spec: SimSpec): Record<string, number> {
   const out: Record<string, number> = {}
   for (const [k, v] of Object.entries(spec.params || {})) {
@@ -89,14 +106,19 @@ export const SimPanel: React.FC<SimPanelProps> = ({
   const paramDefs = templated && spec.templateId && isTemplateId(spec.templateId)
     ? TEMPLATE_CATALOG[spec.templateId].params
     : []
+  const metrics = bound?.metrics ?? {}
+  const metricEntries = Object.entries(metrics)
 
   return (
     <div
+      className="sim-panel"
       style={{
         display: 'flex',
         flexDirection: 'column',
-        flexShrink: 0,
+        flex: 1,
+        minHeight: 0,
         width: '100%',
+        overflow: 'hidden',
       }}
     >
       <div
@@ -146,7 +168,7 @@ export const SimPanel: React.FC<SimPanelProps> = ({
                 color: isAnimationVisible ? 'var(--color-text-muted)' : 'var(--color-primary)',
                 fontWeight: isAnimationVisible ? 400 : 600,
               }}
-              title={isAnimationVisible ? 'Hide simulation animation to focus on explanation' : 'Show simulation animation'}
+                title={isAnimationVisible ? 'Hide simulation animation' : 'Show simulation animation'}
             >
               <span>{isAnimationVisible ? '👁️' : '🎬'}</span>
               <span>{isAnimationVisible ? 'Hide Animation' : 'Show Animation'}</span>
@@ -226,116 +248,140 @@ export const SimPanel: React.FC<SimPanelProps> = ({
         </div>
       </div>
 
+      {metricEntries.length > 0 && (
+        <div className="sim-results">
+          {bound?.warnings && bound.warnings.length > 0 && (
+            <div className="sim-result-warn">{bound.warnings.join(' · ')}</div>
+          )}
+          {metricEntries.map(([k, v]) => (
+            <div key={k} className="sim-result-card">
+              <span className="sim-result-card__key">{formatMetricKey(k)}</span>
+              <span className="sim-result-card__value">{formatMetricValue(v)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {isAnimationVisible ? (
         <div
           style={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            padding: '1rem',
+            minHeight: 0,
             backgroundColor: 'var(--color-bg)',
-            minHeight: '260px',
-            maxHeight: templated ? '420px' : '340px',
           }}
         >
           <div
             style={{
               flex: 1,
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-sm)',
+              minHeight: 0,
+              height: 0,
+              padding: '0.75rem 1rem 0',
               display: 'flex',
-              flexDirection: 'column',
-              position: 'relative',
-              minHeight: '220px',
             }}
           >
-            <SimStage
-              key={`${spec.templateId || spec.title}:${JSON.stringify(sliderParams)}`}
-              stage={stage}
-              autoPlay={true}
-              initialSpeed={1}
-              showControls={true}
-            />
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-sm)',
+                display: 'flex',
+                position: 'relative',
+              }}
+            >
+              <SimStage
+                key={`${spec.templateId || spec.title}:${JSON.stringify(sliderParams)}`}
+                stage={stage}
+                autoPlay={true}
+                initialSpeed={1}
+                showControls={true}
+              />
+            </div>
           </div>
 
           {templated && paramDefs.length > 0 && (
-            <div
-              style={{
-                marginTop: '0.65rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.35rem',
-              }}
-            >
-              {bound?.warnings && bound.warnings.length > 0 && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>
-                  {bound.warnings.join(' · ')}
-                </div>
-              )}
-              {bound?.metrics && (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.45rem',
-                    fontSize: '0.72rem',
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-primary)',
-                  }}
-                >
-                  {Object.entries(bound.metrics).map(([k, v]) => (
-                    <span
-                      key={k}
-                      style={{
-                        background: 'var(--color-primary-subtle)',
-                        padding: '0.12rem 0.4rem',
-                        borderRadius: 'var(--radius-sm)',
-                      }}
-                    >
-                      {k}={typeof v === 'number' ? Number(v).toFixed(2) : String(v)}
+            <div className="sim-controls">
+              <div className="sim-controls__title">Parameters</div>
+              {paramDefs.map((def) => {
+                const raw = sliderParams[def.key] ?? def.defaultValue
+                const setValue = (next: number) =>
+                  setSliderParams((prev) => ({ ...prev, [def.key]: next }))
+
+                if (def.options?.length) {
+                  const selected =
+                    def.options.reduce((best, opt) =>
+                      Math.abs(opt.value - raw) < Math.abs(best.value - raw) ? opt : best
+                    ).value
+                  const useSelect = def.options.length > 5
+                  return (
+                    <div key={def.key} className="sim-param sim-param--choice">
+                      <span className="sim-param__label">{def.label}</span>
+                      {useSelect ? (
+                        <select
+                          className="sim-choice-select"
+                          value={selected}
+                          onChange={(e) => setValue(Number(e.target.value))}
+                        >
+                          {def.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="sim-choice" role="group" aria-label={def.label}>
+                          {def.options.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              className="sim-choice__btn"
+                              aria-pressed={opt.value === selected}
+                              onClick={() => setValue(opt.value)}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
+                return (
+                  <label
+                    key={def.key}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '110px 1fr 64px',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.75rem',
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    <span>
+                      {def.label}
+                      {def.unit ? ` (${def.unit})` : ''}
                     </span>
-                  ))}
-                </div>
-              )}
-              {paramDefs.map((def) => (
-                <label
-                  key={def.key}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '110px 1fr 64px',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-text-muted)',
-                  }}
-                >
-                  <span>
-                    {def.label}
-                    {def.unit ? ` (${def.unit})` : ''}
-                  </span>
-                  <input
-                    type="range"
-                    min={def.min}
-                    max={def.max}
-                    step={def.step}
-                    value={sliderParams[def.key] ?? def.defaultValue}
-                    onChange={(e) =>
-                      setSliderParams((prev) => ({
-                        ...prev,
-                        [def.key]: Number(e.target.value),
-                      }))
-                    }
-                  />
-                  <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>
-                    {(sliderParams[def.key] ?? def.defaultValue).toFixed(
-                      def.step < 1 ? 2 : 0
-                    )}
-                  </span>
-                </label>
-              ))}
+                    <input
+                      type="range"
+                      min={def.min}
+                      max={def.max}
+                      step={def.step}
+                      value={raw}
+                      onChange={(e) => setValue(Number(e.target.value))}
+                    />
+                    <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>
+                      {raw.toFixed(def.step < 1 ? 2 : 0)}
+                    </span>
+                  </label>
+                )
+              })}
             </div>
           )}
         </div>
@@ -354,7 +400,7 @@ export const SimPanel: React.FC<SimPanelProps> = ({
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span>📖</span>
-            <strong>Focus Mode Active:</strong> Animation hidden to maximize explanation & theory view
+            <strong>Animation hidden</strong>
           </span>
           {onToggleAnimation && (
             <button
